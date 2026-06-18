@@ -3,12 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Self-Service-Testeo</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Mi Entorno 3D - Selección de Horario</title>
+    <!-- Importamos A-Frame (la magia del 3D) -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    
+    <!-- Un pequeño script para darle interactividad a los bloques -->
+    <script>
+        AFRAME.registerComponent('boton-horario', {
+            init: function () {
+                let el = this.el;
+                
+                // Cuando haces clic en el bloque
+                el.addEventListener('click', function () {
+                    el.setAttribute('color', '#4CC3D9'); // Cambia a azul
+                    let horarioElegido = el.getAttribute('data-horario');
+                    alert("¡Listo! Has seleccionado el horario: " + horarioElegido);
+                });
+
+                // Cuando pones el cursor encima (animación de hover)
+                el.addEventListener('mouseenter', function () {
+                    el.setAttribute('scale', '1.1 1.1 1.1');
+                });
+
+                // Cuando quitas el cursor
+                el.addEventListener('mouseleave', function () {
+                    el.setAttribute('scale', '1 1 1');
+                    el.setAttribute('color', '#EF2D5E'); // Vuelve a rojo
+                });
+            }
+        });
+    </script>
 </head>
 <body>
-    <div class="contenedor">
-        <div class="corazon"></div>
-    </div>
+    <a-scene>
+        <!-- El fondo (puedes poner una imagen 360 aquí si quieres) -->
+        <a-sky color="#1a1a2e"></a-sky>
+
+        <!-- El piso (como si fuera pasto o una alfombra) -->
+        <a-plane position="0 0 -4" rotation="-90 0 0" width="15" height="15" color="#16213e"></a-plane>
+
+        <!-- Título flotante -->
+        <a-text value="Selecciona tu Horario UPSLP" position="-1.8 3.5 -4" color="#FFFFFF" width="8"></a-text>
+
+        <!-- BLOQUE 1: Horario Matutino -->
+        <!-- position="X Y Z" (Izquierda/Derecha, Arriba/Abajo, Profundidad) -->
+        <a-box position="-2 1.5 -4" color="#EF2D5E" boton-horario data-horario="Matutino (7:00 AM - 1:00 PM)">
+            <a-text value="Matutino" position="-0.4 0 0.6" color="black" width="4"></a-text>
+        </a-box>
+
+        <!-- BLOQUE 2: Horario Vespertino -->
+        <a-box position="2 1.5 -4" color="#EF2D5E" boton-horario data-horario="Vespertino (2:00 PM - 8:00 PM)">
+            <a-text value="Vespertino" position="-0.5 0 0.6" color="black" width="4"></a-text>
+        </a-box>
+
+        <!-- La cámara del jugador y el cursor para poder interactuar -->
+        <a-camera>
+            <a-cursor color="#FFCC00" animation__click="property: scale; startEvents: click; easing: easeInCubic; dur: 150; from: 0.1 0.1 0.1; to: 1 1 1"></a-cursor>
+        </a-camera>
+    </a-scene>
 </body>
 </html>
