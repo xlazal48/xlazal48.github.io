@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prototipo V3 - Horario Nocturno UPSLP</title>
+    <title>Prototipo V4 - Selección de Grupos UPSLP</title>
     <style>
         /* ================= ESTILOS GENERALES ================= */
         body {
@@ -34,17 +34,17 @@
             flex: 1;
             padding: 30px 40px;
             gap: 30px;
-            overflow: hidden; /* Evita que la página entera haga scroll */
+            overflow: hidden; 
         }
 
         /* ================= PANEL BUSCADOR ================= */
         .panel-buscador {
-            width: 32%;
+            width: 35%; /* Lo hice un poquito más ancho para que quepan los textos del horario */
             background: white;
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-            overflow-y: auto; /* Scroll independiente */
+            overflow-y: auto; 
         }
 
         .clase-card {
@@ -56,9 +56,26 @@
             transition: all 0.2s ease;
         }
 
-        .clase-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .clase-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .clase-card h4 { margin: 0 0 6px 0; color: #1a202c; font-size: 16px; font-weight: 600; }
         .clase-card p { margin: 4px 0; font-size: 13px; color: #718096; }
+
+        /* Estilo para el menú desplegable de horarios */
+        .select-horario {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            background-color: #f7fafc;
+            color: #2d3748;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .select-horario:focus { border-color: #3182ce; }
+        .select-horario:disabled { background-color: #edf2f7; cursor: not-allowed; }
 
         .btn {
             padding: 10px 16px;
@@ -76,26 +93,22 @@
         .btn-add:hover { background: #3182ce; color: white; }
         .btn-remove { background: #fff5f5; color: #e53e3e; }
         .btn-remove:hover { background: #e53e3e; color: white; }
-        .btn-full { background: #f7fafc; color: #a0aec0; cursor: not-allowed; }
 
         /* ================= CALENDARIO ================= */
         .panel-horario {
-            width: 68%;
+            width: 65%;
             background: white;
             border-radius: 12px;
-            padding: 0; /* Quitamos el padding para que el encabezado se quede fijo */
+            padding: 0; 
             box-shadow: 0 8px 24px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        .horario-header-fijo {
-            padding: 20px 25px 0 25px;
-        }
-
+        .horario-header-fijo { padding: 20px 25px 0 25px; }
         .horario-scroll {
-            overflow-y: auto; /* EL SECRETO: Scroll solo para la tabla de horas */
+            overflow-y: auto; 
             padding: 0 25px 25px 25px;
             flex: 1;
         }
@@ -103,7 +116,6 @@
         .horario-grid {
             display: grid;
             grid-template-columns: 60px repeat(5, 1fr);
-            /* AHORA SON 14 FILAS: De 7 AM a 8 PM */
             grid-template-rows: 50px repeat(14, 75px); 
             background-color: white;
             border: 1px solid #edf2f7;
@@ -119,7 +131,7 @@
             font-size: 14px;
             border-bottom: 2px solid #edf2f7;
             position: sticky;
-            top: 0; /* Para que los días no se pierdan al bajar */
+            top: 0; 
             z-index: 2;
         }
 
@@ -170,7 +182,6 @@
         .color-4 { background-color: #fef0db; color: #b06000; border-left: 4px solid #b06000; } 
         .color-5 { background-color: #f3e8fd; color: #681da8; border-left: 4px solid #681da8; } 
         .color-6 { background-color: #e4f7fb; color: #00838f; border-left: 4px solid #00838f; } 
-        .color-7 { background-color: #ffe4e6; color: #e11d48; border-left: 4px solid #e11d48; } 
     </style>
 </head>
 <body>
@@ -202,20 +213,47 @@
     </div>
 
     <script>
-        // ================= BASE DE DATOS =================
+        // ================= BASE DE DATOS AVANZADA CON GRUPOS =================
         const materias = [
-            { id: 1, codigo: "T-DPTD-1M", nombre: "Desarrollo del pens. y toma de decisiones", profesor: "Dr. Roberto Gómez", estado: "disponible", colorClass: "color-1", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
-            { id: 2, codigo: "E-CCA-1M", nombre: "Control de calidad", profesor: "Ing. Sofía Mendoza", estado: "disponible", colorClass: "color-2", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8", "Viernes-8"] },
-            { id: 3, codigo: "E-PIN1-1M", nombre: "Proyecto integrador I", profesor: "Mtro. Carlos Ramírez", estado: "lleno", colorClass: "color-3", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9"] },
-            { id: 4, codigo: "B-CIN-1M", nombre: "Cálculo integral", profesor: "Dr. Alejandro Vargas", estado: "disponible", colorClass: "color-4", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] },
-            { id: 5, codigo: "E-DIIN-1M", nombre: "Dibujo industrial", profesor: "Arq. Luis Fernando Soto", estado: "disponible", colorClass: "color-5", bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13", "Viernes-13"] },
-            { id: 6, codigo: "E-PFA1-1M", nombre: "Procesos de fabricación I", profesor: "Ing. Valeria Santos", estado: "disponible", colorClass: "color-6", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-10", "Viernes-11", "Viernes-12"] },
-            // NUEVA MATERIA NOCTURNA PARA PROBAR HASTA LAS 8 PM
-            { id: 7, codigo: "E-CNC-1M", nombre: "Taller de Máquinas CNC (Tarde)", profesor: "Ing. Marcos Toledo", estado: "disponible", colorClass: "color-7", bloques: ["Martes-18", "Martes-19", "Miércoles-18", "Miércoles-19", "Jueves-18"] }
+            { 
+                codigo: "T-DPTD-1M", 
+                nombre: "Desarrollo del pens. y toma de decisiones", 
+                colorClass: "color-1",
+                grupos: [
+                    { idGrupo: "DPTD-G1", prof: "Dr. Roberto Gómez", horario: "07:00 a 08:00 hrs", estado: "disponible", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
+                    { idGrupo: "DPTD-G2", prof: "Sin Asignar", horario: "16:00 a 17:00 hrs", estado: "lleno", bloques: ["Lunes-16", "Martes-16", "Miércoles-16", "Jueves-16"] }
+                ]
+            },
+            { 
+                codigo: "E-CCA-1M", 
+                nombre: "Control de calidad", 
+                colorClass: "color-2",
+                grupos: [
+                    { idGrupo: "CCA-G1", prof: "Ing. Sofía Mendoza", horario: "08:00 a 09:00 hrs", estado: "disponible", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8", "Viernes-8"] },
+                    { idGrupo: "CCA-G2", prof: "Dr. Arturo Torres", horario: "18:00 a 19:00 hrs", estado: "disponible", bloques: ["Lunes-18", "Martes-18", "Miércoles-18", "Jueves-18", "Viernes-18"] }
+                ]
+            },
+            { 
+                codigo: "B-CIN-1M", 
+                nombre: "Cálculo integral", 
+                colorClass: "color-4",
+                grupos: [
+                    { idGrupo: "CIN-G1", prof: "Dr. Alejandro Vargas", horario: "12:00 a 13:00 hrs", estado: "lleno", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] },
+                    { idGrupo: "CIN-G2", prof: "Mtra. Elena Ruiz", horario: "14:00 a 15:00 hrs", estado: "disponible", bloques: ["Lunes-14", "Martes-14", "Miércoles-14", "Jueves-14"] }
+                ]
+            },
+            { 
+                codigo: "E-PFA1-1M", 
+                nombre: "Procesos de fabricación I", 
+                colorClass: "color-6",
+                grupos: [
+                    { idGrupo: "PFA-G1", prof: "Ing. Valeria Santos", horario: "10:00 a 12:00 hrs", estado: "disponible", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-10", "Viernes-11"] }
+                ]
+            }
         ];
 
-        // MEMORIA DEL NAVEGADOR: Lee lo guardado o inicia un arreglo vacío
-        let materiasAgregadas = JSON.parse(localStorage.getItem('horario_v3')) || [];
+        // Guardamos los ID de los GRUPOS que el usuario eligió
+        let gruposAgregados = JSON.parse(localStorage.getItem('horario_v4')) || [];
 
         // ================= DIBUJAR LA CUADRÍCULA =================
         function inicializarHorario() {
@@ -225,9 +263,7 @@
             grid.innerHTML += `<div class="celda-header"></div>`;
             dias.forEach(dia => grid.innerHTML += `<div class="celda-header">${dia}</div>`);
 
-            // EL BUCLE AHORA VA DE LAS 7 (7 AM) A LAS 20 (8 PM)
             for (let hora = 7; hora <= 20; hora++) {
-                // Formato de hora (ej. 14:00, 18:00)
                 grid.innerHTML += `<div class="celda-hora">${hora}:00</div>`;
                 dias.forEach(dia => grid.innerHTML += `<div class="celda" id="${dia}-${hora}"></div>`);
             }
@@ -238,68 +274,100 @@
             const contenedor = document.getElementById('lista-materias');
             contenedor.innerHTML = '<h3 style="margin-top:0; color:#2d3748;">Oferta Académica</h3>';
 
-            materias.forEach(mat => {
-                const isAgregada = materiasAgregadas.includes(mat.id);
-                let botonHTML = '';
+            let contador = 0;
 
+            materias.forEach(mat => {
+                // Revisamos si algún grupo de esta materia ya está agregado
+                const grupoElegido = mat.grupos.find(g => gruposAgregados.includes(g.idGrupo));
+                const isAgregada = !!grupoElegido; 
+
+                let opcionesHTML = '';
+                
+                // Construimos las opciones del <select>
+                mat.grupos.forEach(g => {
+                    // Si el estado es "lleno", le ponemos "disabled" para que salga en gris
+                    let disabledStr = g.estado === 'lleno' ? 'disabled' : '';
+                    let textoEstado = g.estado === 'lleno' ? '(Lleno / Sin Profe)' : '';
+                    let selectedStr = (isAgregada && grupoElegido.idGrupo === g.idGrupo) ? 'selected' : '';
+                    
+                    opcionesHTML += `<option value="${g.idGrupo}" ${disabledStr} ${selectedStr}>
+                                        ${g.horario} - ${g.prof} ${textoEstado}
+                                     </option>`;
+                });
+
+                let controlHTML = '';
                 if (isAgregada) {
-                    botonHTML = `<button class="btn btn-remove" onclick="quitarMateria(${mat.id})">Quitar del horario</button>`;
-                } else if (mat.estado === 'lleno') {
-                    botonHTML = `<button class="btn btn-full" disabled>Cupo Lleno</button>`;
+                    contador++;
+                    controlHTML = `
+                        <select class="select-horario" disabled>
+                            ${opcionesHTML}
+                        </select>
+                        <button class="btn btn-remove" onclick="quitarMateria('${mat.codigo}', '${grupoElegido.idGrupo}')">Quitar del horario</button>
+                    `;
                 } else {
-                    botonHTML = `<button class="btn btn-add" onclick="agregarMateria(${mat.id})">+ Agregar materia</button>`;
+                    controlHTML = `
+                        <select class="select-horario" id="select-${mat.codigo}">
+                            ${opcionesHTML}
+                        </select>
+                        <button class="btn btn-add" onclick="agregarMateria('${mat.codigo}')">+ Confirmar y Agregar</button>
+                    `;
                 }
 
                 contenedor.innerHTML += `
                     <div class="clase-card" style="${isAgregada ? 'border-color: #cbd5e0; background: #f7fafc;' : ''}">
                         <h4>${mat.codigo}</h4>
                         <p style="color:#2d3748; font-weight:500;">${mat.nombre}</p>
-                        <p>👨‍🏫 ${mat.profesor}</p>
-                        <p>🕒 ${mat.bloques.length} horas a la semana</p>
-                        ${botonHTML}
+                        ${controlHTML}
                     </div>
                 `;
             });
-            document.getElementById('contador-creditos').innerText = materiasAgregadas.length;
+
+            document.getElementById('contador-creditos').innerText = contador;
         }
 
-        // ================= PINTAR MATERIAS GUARDADAS AL RECARGAR =================
         function cargarMateriasEnGrid() {
-            materiasAgregadas.forEach(idMateria => {
-                const mat = materias.find(m => m.id === idMateria);
-                if (mat) {
-                    mat.bloques.forEach(bloque => {
-                        const celda = document.getElementById(bloque);
-                        if (celda) {
-                            celda.innerHTML = `
-                                <div class="materia-bloque ${mat.colorClass}">
-                                    <strong>${mat.codigo}</strong>
-                                    <span>${mat.nombre}</span>
-                                </div>
-                            `;
-                        }
-                    });
-                }
+            gruposAgregados.forEach(idGrupo => {
+                materias.forEach(mat => {
+                    const grupoInfo = mat.grupos.find(g => g.idGrupo === idGrupo);
+                    if (grupoInfo) {
+                        grupoInfo.bloques.forEach(bloque => {
+                            const celda = document.getElementById(bloque);
+                            if (celda) {
+                                celda.innerHTML = `
+                                    <div class="materia-bloque ${mat.colorClass}">
+                                        <strong>${mat.codigo}</strong>
+                                        <span>${mat.nombre}</span>
+                                    </div>
+                                `;
+                            }
+                        });
+                    }
+                });
             });
         }
 
         // ================= LÓGICA DE AGREGAR Y QUITAR =================
-        function agregarMateria(idMateria) {
-            const mat = materias.find(m => m.id === idMateria);
+        function agregarMateria(codigoMateria) {
+            // Buscamos qué opción seleccionó el usuario en el dropdown
+            const selector = document.getElementById(`select-${codigoMateria}`);
+            const idGrupoSeleccionado = selector.value;
             
-            // Checar choques
+            let mat = materias.find(m => m.codigo === codigoMateria);
+            let grupoInfo = mat.grupos.find(g => g.idGrupo === idGrupoSeleccionado);
+
+            // Validar choques
             let hayChoque = false;
-            mat.bloques.forEach(bloque => {
+            grupoInfo.bloques.forEach(bloque => {
                 if (document.getElementById(bloque).innerHTML !== '') hayChoque = true;
             });
 
             if (hayChoque) {
-                alert("¡Ups! Hay un choque de horarios. Tienes otra clase a esa hora.");
+                alert("¡Ups! Ese horario choca con otra clase que ya seleccionaste.");
                 return;
             }
 
-            // Pintar
-            mat.bloques.forEach(bloque => {
+            // Pintar en el calendario
+            grupoInfo.bloques.forEach(bloque => {
                 document.getElementById(bloque).innerHTML = `
                     <div class="materia-bloque ${mat.colorClass}">
                         <strong>${mat.codigo}</strong>
@@ -308,42 +376,45 @@
                 `;
             });
 
-            // Guardar en array y en localStorage
-            materiasAgregadas.push(idMateria);
-            localStorage.setItem('horario_v3', JSON.stringify(materiasAgregadas));
+            gruposAgregados.push(idGrupoSeleccionado);
+            localStorage.setItem('horario_v4', JSON.stringify(gruposAgregados));
             
             renderizarMaterias();
         }
 
-        function quitarMateria(idMateria) {
-            const mat = materias.find(m => m.id === idMateria);
+        function quitarMateria(codigoMateria, idGrupo) {
+            let mat = materias.find(m => m.codigo === codigoMateria);
+            let grupoInfo = mat.grupos.find(g => g.idGrupo === idGrupo);
             
-            // Borrar de la tabla
-            mat.bloques.forEach(bloque => { document.getElementById(bloque).innerHTML = ''; });
+            // Borrar
+            grupoInfo.bloques.forEach(bloque => { document.getElementById(bloque).innerHTML = ''; });
             
-            // Quitar del array y actualizar localStorage
-            materiasAgregadas = materiasAgregadas.filter(id => id !== idMateria);
-            localStorage.setItem('horario_v3', JSON.stringify(materiasAgregadas));
+            // Actualizar memoria
+            gruposAgregados = gruposAgregados.filter(id => id !== idGrupo);
+            localStorage.setItem('horario_v4', JSON.stringify(gruposAgregados));
             
             renderizarMaterias();
         }
 
-        // Función extra por si quieres borrar todo de golpe
         function limpiarTodo() {
             if(confirm("¿Seguro que quieres vaciar tu horario wey?")) {
-                materiasAgregadas.forEach(id => {
-                    const mat = materias.find(m => m.id === id);
-                    mat.bloques.forEach(bloque => { document.getElementById(bloque).innerHTML = ''; });
+                gruposAgregados.forEach(idGrupo => {
+                    materias.forEach(mat => {
+                        const grupoInfo = mat.grupos.find(g => g.idGrupo === idGrupo);
+                        if(grupoInfo) {
+                            grupoInfo.bloques.forEach(bloque => { document.getElementById(bloque).innerHTML = ''; });
+                        }
+                    });
                 });
-                materiasAgregadas = [];
-                localStorage.setItem('horario_v3', JSON.stringify(materiasAgregadas));
+                gruposAgregados = [];
+                localStorage.setItem('horario_v4', JSON.stringify(gruposAgregados));
                 renderizarMaterias();
             }
         }
 
-        // ================= INICIALIZACIÓN =================
+        // ================= START =================
         inicializarHorario();
-        cargarMateriasEnGrid(); // Pinta las que tenías guardadas antes de recargar
+        cargarMateriasEnGrid(); 
         renderizarMaterias();
     </script>
 </body>
