@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prototipo V2 - Horario UPSLP</title>
+    <title>Prototipo V3 - Horario Nocturno UPSLP</title>
     <style>
         /* ================= ESTILOS GENERALES ================= */
         body {
@@ -17,7 +17,6 @@
             height: 100vh;
         }
 
-        /* Barra UPSLP */
         .top-bar { background-color: #e65c00; height: 8px; width: 100%; }
         
         .header {
@@ -35,17 +34,17 @@
             flex: 1;
             padding: 30px 40px;
             gap: 30px;
-            overflow: hidden;
+            overflow: hidden; /* Evita que la página entera haga scroll */
         }
 
-        /* ================= PANEL BUSCADOR (IZQUIERDA) ================= */
+        /* ================= PANEL BUSCADOR ================= */
         .panel-buscador {
             width: 32%;
             background: white;
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-            overflow-y: auto;
+            overflow-y: auto; /* Scroll independiente */
         }
 
         .clase-card {
@@ -55,15 +54,12 @@
             border-radius: 10px;
             background: #ffffff;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         .clase-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
-
         .clase-card h4 { margin: 0 0 6px 0; color: #1a202c; font-size: 16px; font-weight: 600; }
-        .clase-card p { margin: 4px 0; font-size: 13px; color: #718096; display: flex; align-items: center; gap: 6px; }
+        .clase-card p { margin: 4px 0; font-size: 13px; color: #718096; }
 
-        /* Botones modernos */
         .btn {
             padding: 10px 16px;
             border: none;
@@ -82,26 +78,36 @@
         .btn-remove:hover { background: #e53e3e; color: white; }
         .btn-full { background: #f7fafc; color: #a0aec0; cursor: not-allowed; }
 
-        /* ================= CALENDARIO (DERECHA) ================= */
+        /* ================= CALENDARIO ================= */
         .panel-horario {
             width: 68%;
             background: white;
             border-radius: 12px;
-            padding: 25px;
+            padding: 0; /* Quitamos el padding para que el encabezado se quede fijo */
             box-shadow: 0 8px 24px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+        }
+
+        .horario-header-fijo {
+            padding: 20px 25px 0 25px;
+        }
+
+        .horario-scroll {
+            overflow-y: auto; /* EL SECRETO: Scroll solo para la tabla de horas */
+            padding: 0 25px 25px 25px;
+            flex: 1;
         }
 
         .horario-grid {
             display: grid;
             grid-template-columns: 60px repeat(5, 1fr);
-            grid-template-rows: 50px repeat(8, 75px); /* Filas más altas */
+            /* AHORA SON 14 FILAS: De 7 AM a 8 PM */
+            grid-template-rows: 50px repeat(14, 75px); 
             background-color: white;
-            flex: 1;
             border: 1px solid #edf2f7;
             border-radius: 8px;
-            overflow: hidden;
         }
 
         .celda-header {
@@ -112,8 +118,9 @@
             padding-top: 15px;
             font-size: 14px;
             border-bottom: 2px solid #edf2f7;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0; /* Para que los días no se pierdan al bajar */
+            z-index: 2;
         }
 
         .celda-hora {
@@ -130,11 +137,10 @@
         .celda {
             border-right: 1px solid #f0f4f8;
             border-bottom: 1px solid #f0f4f8;
-            padding: 4px; /* Espacio para que la tarjeta no toque los bordes */
+            padding: 4px;
             position: relative;
         }
 
-        /* ================= TARJETAS DE MATERIAS (DENTRO DEL CALENDARIO) ================= */
         .materia-bloque {
             height: 90%;
             width: 95%;
@@ -153,20 +159,18 @@
         .materia-bloque strong { font-size: 12px; display: block; margin-bottom: 2px; }
         .materia-bloque span { opacity: 0.85; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* Animación chida al agregar */
         @keyframes popIn {
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Paleta de colores pastel moderna (Estilo Google Calendar) */
-        .color-1 { background-color: #e8f0fe; color: #1967d2; border-left: 4px solid #1967d2; } /* Azul */
-        .color-2 { background-color: #ceead6; color: #0d652d; border-left: 4px solid #0d652d; } /* Verde */
-        .color-3 { background-color: #fce8e6; color: #c5221f; border-left: 4px solid #c5221f; } /* Rojo */
-        .color-4 { background-color: #fef0db; color: #b06000; border-left: 4px solid #b06000; } /* Naranja */
-        .color-5 { background-color: #f3e8fd; color: #681da8; border-left: 4px solid #681da8; } /* Morado */
-        .color-6 { background-color: #e4f7fb; color: #00838f; border-left: 4px solid #00838f; } /* Cyan */
-
+        .color-1 { background-color: #e8f0fe; color: #1967d2; border-left: 4px solid #1967d2; } 
+        .color-2 { background-color: #ceead6; color: #0d652d; border-left: 4px solid #0d652d; } 
+        .color-3 { background-color: #fce8e6; color: #c5221f; border-left: 4px solid #c5221f; } 
+        .color-4 { background-color: #fef0db; color: #b06000; border-left: 4px solid #b06000; } 
+        .color-5 { background-color: #f3e8fd; color: #681da8; border-left: 4px solid #681da8; } 
+        .color-6 { background-color: #e4f7fb; color: #00838f; border-left: 4px solid #00838f; } 
+        .color-7 { background-color: #ffe4e6; color: #e11d48; border-left: 4px solid #e11d48; } 
     </style>
 </head>
 <body>
@@ -177,34 +181,41 @@
             <h2 style="margin:0; color:#1a202c; font-size:22px;">Mi Horario - UPSLP</h2>
             <p style="margin:4px 0 0 0; color:#718096; font-size:14px;">Ingeniería en Manufactura Avanzada</p>
         </div>
-        <div style="background: #f7fafc; padding: 10px 20px; border-radius: 8px; border: 1px solid #edf2f7;">
-            <span style="color: #4a5568; font-size: 14px;">Materias seleccionadas:</span>
-            <strong style="color: #e65c00; font-size: 18px; margin-left: 8px;" id="contador-creditos">0</strong>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button class="btn btn-remove" onclick="limpiarTodo()" style="margin: 0;">🗑️ Borrar Todo</button>
+            <div style="background: #f7fafc; padding: 10px 20px; border-radius: 8px; border: 1px solid #edf2f7;">
+                <span style="color: #4a5568; font-size: 14px;">Materias seleccionadas:</span>
+                <strong style="color: #e65c00; font-size: 18px; margin-left: 8px;" id="contador-creditos">0</strong>
+            </div>
         </div>
     </div>
 
     <div class="main-container">
-        <div class="panel-buscador" id="lista-materias">
-            </div>
+        <div class="panel-buscador" id="lista-materias"></div>
 
         <div class="panel-horario">
-            <div class="horario-grid" id="cuadricula">
-                </div>
+            <div class="horario-header-fijo"></div>
+            <div class="horario-scroll">
+                <div class="horario-grid" id="cuadricula"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // ================= BASE DE DATOS SIMULADA =================
+        // ================= BASE DE DATOS =================
         const materias = [
             { id: 1, codigo: "T-DPTD-1M", nombre: "Desarrollo del pens. y toma de decisiones", profesor: "Dr. Roberto Gómez", estado: "disponible", colorClass: "color-1", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
             { id: 2, codigo: "E-CCA-1M", nombre: "Control de calidad", profesor: "Ing. Sofía Mendoza", estado: "disponible", colorClass: "color-2", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8", "Viernes-8"] },
             { id: 3, codigo: "E-PIN1-1M", nombre: "Proyecto integrador I", profesor: "Mtro. Carlos Ramírez", estado: "lleno", colorClass: "color-3", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9"] },
             { id: 4, codigo: "B-CIN-1M", nombre: "Cálculo integral", profesor: "Dr. Alejandro Vargas", estado: "disponible", colorClass: "color-4", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] },
             { id: 5, codigo: "E-DIIN-1M", nombre: "Dibujo industrial", profesor: "Arq. Luis Fernando Soto", estado: "disponible", colorClass: "color-5", bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13", "Viernes-13"] },
-            { id: 6, codigo: "E-PFA1-1M", nombre: "Procesos de fabricación I", profesor: "Ing. Valeria Santos", estado: "disponible", colorClass: "color-6", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-10", "Viernes-11", "Viernes-12"] }
+            { id: 6, codigo: "E-PFA1-1M", nombre: "Procesos de fabricación I", profesor: "Ing. Valeria Santos", estado: "disponible", colorClass: "color-6", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-10", "Viernes-11", "Viernes-12"] },
+            // NUEVA MATERIA NOCTURNA PARA PROBAR HASTA LAS 8 PM
+            { id: 7, codigo: "E-CNC-1M", nombre: "Taller de Máquinas CNC (Tarde)", profesor: "Ing. Marcos Toledo", estado: "disponible", colorClass: "color-7", bloques: ["Martes-18", "Martes-19", "Miércoles-18", "Miércoles-19", "Jueves-18"] }
         ];
 
-        let materiasAgregadas = [];
+        // MEMORIA DEL NAVEGADOR: Lee lo guardado o inicia un arreglo vacío
+        let materiasAgregadas = JSON.parse(localStorage.getItem('horario_v3')) || [];
 
         // ================= DIBUJAR LA CUADRÍCULA =================
         function inicializarHorario() {
@@ -214,7 +225,9 @@
             grid.innerHTML += `<div class="celda-header"></div>`;
             dias.forEach(dia => grid.innerHTML += `<div class="celda-header">${dia}</div>`);
 
-            for (let hora = 7; hora <= 14; hora++) {
+            // EL BUCLE AHORA VA DE LAS 7 (7 AM) A LAS 20 (8 PM)
+            for (let hora = 7; hora <= 20; hora++) {
+                // Formato de hora (ej. 14:00, 18:00)
                 grid.innerHTML += `<div class="celda-hora">${hora}:00</div>`;
                 dias.forEach(dia => grid.innerHTML += `<div class="celda" id="${dia}-${hora}"></div>`);
             }
@@ -250,24 +263,44 @@
             document.getElementById('contador-creditos').innerText = materiasAgregadas.length;
         }
 
-        // ================= LÓGICA =================
+        // ================= PINTAR MATERIAS GUARDADAS AL RECARGAR =================
+        function cargarMateriasEnGrid() {
+            materiasAgregadas.forEach(idMateria => {
+                const mat = materias.find(m => m.id === idMateria);
+                if (mat) {
+                    mat.bloques.forEach(bloque => {
+                        const celda = document.getElementById(bloque);
+                        if (celda) {
+                            celda.innerHTML = `
+                                <div class="materia-bloque ${mat.colorClass}">
+                                    <strong>${mat.codigo}</strong>
+                                    <span>${mat.nombre}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            });
+        }
+
+        // ================= LÓGICA DE AGREGAR Y QUITAR =================
         function agregarMateria(idMateria) {
             const mat = materias.find(m => m.id === idMateria);
             
+            // Checar choques
             let hayChoque = false;
             mat.bloques.forEach(bloque => {
                 if (document.getElementById(bloque).innerHTML !== '') hayChoque = true;
             });
 
             if (hayChoque) {
-                alert("¡Ups! Hay un choque de horarios.");
+                alert("¡Ups! Hay un choque de horarios. Tienes otra clase a esa hora.");
                 return;
             }
 
+            // Pintar
             mat.bloques.forEach(bloque => {
-                const celda = document.getElementById(bloque);
-                // AHORA INSERTAMOS UN DIV CON CLASE ADENTRO DE LA CELDA
-                celda.innerHTML = `
+                document.getElementById(bloque).innerHTML = `
                     <div class="materia-bloque ${mat.colorClass}">
                         <strong>${mat.codigo}</strong>
                         <span>${mat.nombre}</span>
@@ -275,18 +308,42 @@
                 `;
             });
 
+            // Guardar en array y en localStorage
             materiasAgregadas.push(idMateria);
+            localStorage.setItem('horario_v3', JSON.stringify(materiasAgregadas));
+            
             renderizarMaterias();
         }
 
         function quitarMateria(idMateria) {
             const mat = materias.find(m => m.id === idMateria);
+            
+            // Borrar de la tabla
             mat.bloques.forEach(bloque => { document.getElementById(bloque).innerHTML = ''; });
+            
+            // Quitar del array y actualizar localStorage
             materiasAgregadas = materiasAgregadas.filter(id => id !== idMateria);
+            localStorage.setItem('horario_v3', JSON.stringify(materiasAgregadas));
+            
             renderizarMaterias();
         }
 
+        // Función extra por si quieres borrar todo de golpe
+        function limpiarTodo() {
+            if(confirm("¿Seguro que quieres vaciar tu horario wey?")) {
+                materiasAgregadas.forEach(id => {
+                    const mat = materias.find(m => m.id === id);
+                    mat.bloques.forEach(bloque => { document.getElementById(bloque).innerHTML = ''; });
+                });
+                materiasAgregadas = [];
+                localStorage.setItem('horario_v3', JSON.stringify(materiasAgregadas));
+                renderizarMaterias();
+            }
+        }
+
+        // ================= INICIALIZACIÓN =================
         inicializarHorario();
+        cargarMateriasEnGrid(); // Pinta las que tenías guardadas antes de recargar
         renderizarMaterias();
     </script>
 </body>
