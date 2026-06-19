@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Inscripciones</title>
+    <title>Prototipo - Selección de Horario UPSLP</title>
     <style>
         /* ================= ESTILOS GENERALES ================= */
         body {
@@ -12,76 +12,97 @@
             margin: 0;
             padding: 0;
             color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
-        .top-bar {
-            background-color: #e65c00; /* Naranja estilo UPSLP */
-            height: 15px;
-            width: 100%;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border-radius: 8px;
-        }
-
-        /* Botones generales */
-        .btn-blue {
-            background-color: #0056b3;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
+        .top-bar { background-color: #e65c00; height: 15px; width: 100%; }
         
-        .btn-blue:hover { background-color: #004494; }
-
-        .btn-outline {
+        .header {
             background: white;
-            color: #0056b3;
-            border: 1px solid #0056b3;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        /* ================= VISTA 1: HORARIO ================= */
-        .header-horario {
+            padding: 15px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
         }
 
-        .carrera-titulo {
-            font-size: 18px;
-            color: #222;
-            margin: 0;
+        .main-container {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+            overflow: hidden;
         }
 
-        .carrera-subtitulo {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
+        /* ================= PANEL IZQUIERDO (BUSCADOR) ================= */
+        .panel-buscador {
+            width: 35%;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
         }
 
-        /* Cuadrícula del horario (CSS Grid) */
+        .clase-card {
+            border: 1px solid #e0e0e0;
+            border-left: 5px solid #0056b3;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .clase-card.lleno { border-left-color: #dc3545; opacity: 0.8; }
+        .clase-card.agregado { border-left-color: #28a745; background: #e9f7ef; }
+
+        .clase-card h4 { margin: 0 0 8px 0; color: #222; font-size: 15px; }
+        .clase-card p { margin: 3px 0; font-size: 13px; color: #555; }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .btn-add { background: #0056b3; color: white; }
+        .btn-add:hover { background: #004494; }
+        .btn-remove { background: #dc3545; color: white; }
+        .btn-full { background: #e0e0e0; color: #666; cursor: not-allowed; }
+
+        /* ================= PANEL DERECHO (HORARIO) ================= */
+        .panel-horario {
+            width: 65%;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
         .horario-grid {
             display: grid;
             grid-template-columns: 60px repeat(5, 1fr);
-            grid-template-rows: 40px repeat(8, 60px); /* Cabecera + 8 horas */
+            grid-template-rows: 40px repeat(8, 60px);
             gap: 2px;
-            background-color: #e0e0e0;
+            background-color: #ccc;
             border: 1px solid #ccc;
+            flex: 1;
+        }
+
+        .celda {
+            background: white;
+            padding: 5px;
+            font-size: 11px;
+            overflow: hidden;
+            transition: all 0.3s;
         }
 
         .celda-header {
@@ -93,290 +114,214 @@
         }
 
         .celda-hora {
-            background: white;
+            background: #f8f9fa;
             text-align: right;
             padding-right: 5px;
             font-size: 12px;
             color: #666;
             padding-top: 5px;
+            font-weight: bold;
         }
 
-        .clase-bloque {
-            background: white;
-            border-left: 4px solid #00a65a; /* Borde verde */
-            padding: 5px;
-            font-size: 11px;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        /* ================= VISTA 2: CARRITO / BUSCADOR ================= */
-        #vista-carrito {
-            display: none; /* Oculto por defecto */
-        }
-
-        .layout-carrito {
-            display: flex;
-            gap: 20px;
-        }
-
-        .panel-izquierdo {
-            flex: 2;
-        }
-
-        .panel-derecho {
-            flex: 1;
-        }
-
-        .buscador-caja {
-            border: 1px solid #ccc;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .input-busqueda {
-            width: 90%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        /* Tarjetas de las clases disponibles */
-        .clase-disponible {
-            border: 1px solid #e0e0e0;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            background: #fafafa;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .clase-info h4 { margin: 0 0 5px 0; color: #0056b3; }
-        .clase-info p { margin: 3px 0; font-size: 14px; color: #444; }
-
-        .alerta-naranja {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 15px;
-            border-left: 4px solid #e65c00;
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-
-        .widget-horario {
-            border: 1px solid #ccc;
-            border-top: 4px solid #e65c00;
-            height: 300px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #666;
-            background: white;
-        }
+        /* Colores dinámicos para las materias cuando se agregan */
+        .ocupado-1 { background-color: #d1e7dd; border-left: 4px solid #0f5132; color: #0f5132; }
+        .ocupado-2 { background-color: #cff4fc; border-left: 4px solid #055160; color: #055160; }
+        .ocupado-3 { background-color: #f8d7da; border-left: 4px solid #842029; color: #842029; }
+        .ocupado-4 { background-color: #fff3cd; border-left: 4px solid #664d03; color: #664d03; }
+        .ocupado-5 { background-color: #e2e3e5; border-left: 4px solid #41464b; color: #41464b; }
+        .ocupado-6 { background-color: #c29ffa; border-left: 4px solid #4b0082; color: #4b0082; }
 
     </style>
 </head>
 <body>
 
     <div class="top-bar"></div>
-
-    <!-- ========================================== -->
-    <!-- VISTA 1: EL HORARIO PRINCIPAL              -->
-    <!-- ========================================== -->
-    <div class="container" id="vista-horario">
-        <div class="header-horario">
-            <div>
-                <select style="padding: 5px; margin-bottom: 15px;">
-                    <option>Período 2026/20262C</option>
-                </select>
-                <h2 class="carrera-titulo">Licenciatura en Ingeniería en Manufactura Avanzada</h2>
-                <p class="carrera-subtitulo">Escolarizada, Licenciatura</p>
-            </div>
-            <div>
-                <!-- Este botón dispara la función de JS para cambiar de pantalla -->
-                <button class="btn-blue" onclick="cambiarVista()">VER CARRITO</button>
-            </div>
+    <div class="header">
+        <div>
+            <h2 style="margin:0;">Inscripciones UPSLP - Modo Prototipo</h2>
+            <p style="margin:5px 0 0 0; color:#666; font-size:14px;">Ingeniería en Manufactura Avanzada</p>
         </div>
-
-        <!-- Grid del Horario -->
-        <div class="horario-grid">
-            <!-- Cabeceras de Días -->
-            <div class="celda-header"></div>
-            <div class="celda-header">lunes</div>
-            <div class="celda-header">martes</div>
-            <div class="celda-header">miércoles</div>
-            <div class="celda-header">jueves</div>
-            <div class="celda-header">viernes</div>
-
-            <!-- Fila 7:00 -->
-            <div class="celda-hora">7:00</div>
-            <div class="clase-bloque">T-DPTD-1M: Desarrollo del pens. y toma de...</div>
-            <div class="clase-bloque">T-DPTD-1M: Desarrollo del pens. y toma de...</div>
-            <div class="clase-bloque">T-DPTD-1M: Desarrollo del pens. y toma de...</div>
-            <div class="clase-bloque">T-DPTD-1M: Desarrollo del pens. y toma de...</div>
-            <div style="background: white;"></div> <!-- Viernes libre a las 7 -->
-
-            <!-- Fila 8:00 -->
-            <div class="celda-hora">8:00</div>
-            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
-            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
-            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
-            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
-            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
-
-            <!-- Fila 9:00 -->
-            <div class="celda-hora">9:00</div>
-            <div class="clase-bloque">E-PIN1-1M: Proyecto integrador I</div>
-            <div class="clase-bloque">E-PIN1-1M: Proyecto integrador I</div>
-            <div class="clase-bloque">E-PIN1-1M: Proyecto integrador I</div>
-            <div class="clase-bloque">E-PIN1-1M: Proyecto integrador I</div>
-            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
-
-            <!-- Fila 10:00 -->
-            <div class="celda-hora">10:00</div>
-            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
-            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
-            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
-            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
-            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
-
-            <!-- Fila 11:00 -->
-            <div class="celda-hora">11:00</div>
-            <div style="background: white;"></div>
-            <div style="background: white;"></div>
-            <div style="background: white;"></div>
-            <div style="background: white;"></div>
-            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
-
-            <!-- Fila 12:00 -->
-            <div class="celda-hora">12:00</div>
-            <div class="clase-bloque">B-CIN-1M: Cálculo integral</div>
-            <div class="clase-bloque">B-CIN-1M: Cálculo integral</div>
-            <div class="clase-bloque">B-CIN-1M: Cálculo integral</div>
-            <div class="clase-bloque">B-CIN-1M: Cálculo integral</div>
-            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
-
-            <!-- Fila 13:00 -->
-            <div class="celda-hora">13:00</div>
-            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
-            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
-            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
-            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
-            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
-
-            <!-- Fila 14:00 -->
-            <div class="celda-hora">14:00</div>
-            <div style="background: white;"></div>
-            <div style="background: white;"></div>
-            <div style="background: white;"></div>
-            <div style="background: white;"></div>
-            <div style="background: white;"></div>
+        <div style="text-align: right;">
+            <strong>Créditos seleccionados: <span id="contador-creditos">0</span></strong>
         </div>
     </div>
 
-
-    <!-- ========================================== -->
-    <!-- VISTA 2: BUSCADOR DE CLASES Y CARRITO      -->
-    <!-- ========================================== -->
-    <div class="container" id="vista-carrito">
-        <button class="btn-outline" onclick="volverHorario()" style="margin-bottom: 20px;">← Volver a mi horario</button>
-        <h2>Cursos</h2>
-        
-        <div class="layout-carrito">
-            <!-- Panel Izquierdo: Buscador y Lista de Materias -->
-            <div class="panel-izquierdo">
-                <div class="buscador-caja">
-                    <label>Buscar clases de 2026/20261S</label>
-                    <input type="text" class="input-busqueda" placeholder="Buscar materia o profesor...">
-                </div>
-
-                <h3>Clases Disponibles</h3>
-                
-                <!-- Materia 1 -->
-                <div class="clase-disponible">
-                    <div class="clase-info">
-                        <h4>E-CCA-1M: Control de calidad</h4>
-                        <p><strong>Profesor(a):</strong> Ing. Sofía Mendoza</p>
-                        <p><strong>Cupos:</strong> 5 disponibles</p>
-                        <p><strong>Horario:</strong> Lunes a Jueves (8:00 - 9:00), Viernes (8:00 - 10:00)</p>
-                    </div>
-                    <button class="btn-blue">Añadir al carrito</button>
-                </div>
-
-                <!-- Materia 2 -->
-                <div class="clase-disponible">
-                    <div class="clase-info">
-                        <h4>T-DPTD-1M: Desarrollo del pens. y toma de decisiones</h4>
-                        <p><strong>Profesor(a):</strong> Dr. Roberto Gómez</p>
-                        <p><strong>Cupos:</strong> 12 disponibles</p>
-                        <p><strong>Horario:</strong> Lunes a Jueves (7:00 - 8:00)</p>
-                    </div>
-                    <button class="btn-blue">Añadir al carrito</button>
-                </div>
-
-                <!-- Materia 3 -->
-                <div class="clase-disponible">
-                    <div class="clase-info">
-                        <h4>E-PFA1-1M: Procesos de fabricación I</h4>
-                        <p><strong>Profesor(a):</strong> Mtro. Carlos Ramírez</p>
-                        <p><strong>Cupos:</strong> Lleno (Lista de espera)</p>
-                        <p><strong>Horario:</strong> Lunes a Viernes (10:00 - 11:00), Viernes (11:00 - 13:00)</p>
-                    </div>
-                    <button class="btn-outline">En espera</button>
-                </div>
-
-                <!-- Materia 4 -->
-                <div class="clase-disponible">
-                    <div class="clase-info">
-                        <h4>B-CIN-1M: Cálculo integral</h4>
-                        <p><strong>Profesor(a):</strong> Dr. Alejandro Vargas</p>
-                        <p><strong>Cupos:</strong> 3 disponibles</p>
-                        <p><strong>Horario:</strong> Lunes a Jueves (12:00 - 13:00)</p>
-                    </div>
-                    <button class="btn-blue">Añadir al carrito</button>
-                </div>
+    <div class="main-container">
+        <div class="panel-buscador" id="lista-materias">
+            <h3>Materias Ofertadas</h3>
             </div>
 
-            <!-- Panel Derecho: Alerta y Widget de Horario Vacío -->
-            <div class="panel-derecho">
-                <div class="alerta-naranja">
-                    <strong>!</strong> No puede inscribirse a este período en este momento. Intentar otro período o volver más tarde.
+        <div class="panel-horario">
+            <h3 style="margin-top:0;">Mi Horario</h3>
+            <div class="horario-grid" id="cuadricula">
                 </div>
-                
-                <div class="widget-horario">
-                    <h4 style="margin: 0 0 20px 0; align-self: flex-start; padding-left: 20px;">🛒 Mi horario</h4>
-                    <div style="font-size: 50px; color: #ff8c00;">📅</div>
-                    <p>Su horario está vacío</p>
-                    
-                    <div style="width: 100%; border-top: 1px solid #eee; margin-top: auto; padding: 15px; display: flex; justify-content: space-between; box-sizing: border-box;">
-                        <span style="font-size: 12px; font-weight: bold;">0<br>Inscrito</span>
-                        <button style="background: #ccc; border: none; padding: 5px 15px; color: white; border-radius: 3px;" disabled>INSCRIBIRSE</button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- SCRIPT PARA CAMBIAR DE PANTALLA            -->
-    <!-- ========================================== -->
     <script>
-        function cambiarVista() {
-            // Oculta el horario y muestra el carrito
-            document.getElementById('vista-horario').style.display = 'none';
-            document.getElementById('vista-carrito').style.display = 'block';
+        // ================= BASE DE DATOS SIMULADA =================
+        const materias = [
+            {
+                id: 1,
+                codigo: "T-DPTD-1M",
+                nombre: "Desarrollo del pens. y toma de decisiones",
+                profesor: "Dr. Roberto Gómez",
+                estado: "disponible",
+                colorClass: "ocupado-1",
+                bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"]
+            },
+            {
+                id: 2,
+                codigo: "E-CCA-1M",
+                nombre: "Control de calidad",
+                profesor: "Ing. Sofía Mendoza",
+                estado: "disponible",
+                colorClass: "ocupado-2",
+                bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8", "Viernes-8"]
+            },
+            {
+                id: 3,
+                codigo: "E-PIN1-1M",
+                nombre: "Proyecto integrador I",
+                profesor: "Mtro. Carlos Ramírez",
+                estado: "lleno", // Simulamos que ya no hay cupo
+                colorClass: "ocupado-3",
+                bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9"]
+            },
+            {
+                id: 4,
+                codigo: "B-CIN-1M",
+                nombre: "Cálculo integral",
+                profesor: "Dr. Alejandro Vargas",
+                estado: "disponible",
+                colorClass: "ocupado-4",
+                bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"]
+            },
+            {
+                id: 5,
+                codigo: "E-DIIN-1M",
+                nombre: "Dibujo industrial",
+                profesor: "Arq. Luis Fernando Soto",
+                estado: "disponible",
+                colorClass: "ocupado-5",
+                bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13", "Viernes-13"]
+            },
+            {
+                id: 6,
+                codigo: "E-PFA1-1M",
+                nombre: "Procesos de fabricación I",
+                profesor: "Ing. Valeria Santos",
+                estado: "disponible",
+                colorClass: "ocupado-6",
+                bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-10", "Viernes-11", "Viernes-12"]
+            }
+        ];
+
+        // Estado de la aplicación
+        let materiasAgregadas = [];
+
+        // ================= DIBUJAR LA CUADRÍCULA EN BLANCO =================
+        function inicializarHorario() {
+            const grid = document.getElementById('cuadricula');
+            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+            
+            // Fila de encabezados (Días)
+            grid.innerHTML += `<div class="celda-header"></div>`;
+            dias.forEach(dia => grid.innerHTML += `<div class="celda-header">${dia}</div>`);
+
+            // Filas de horas (De 7 a 14 hrs)
+            for (let hora = 7; hora <= 14; hora++) {
+                grid.innerHTML += `<div class="celda-hora">${hora}:00</div>`;
+                dias.forEach(dia => {
+                    // Creamos celdas con IDs únicos, ej: "Lunes-7"
+                    grid.innerHTML += `<div class="celda" id="${dia}-${hora}"></div>`;
+                });
+            }
         }
 
-        function volverHorario() {
-            // Oculta el carrito y vuelve al horario
-            document.getElementById('vista-carrito').style.display = 'none';
-            document.getElementById('vista-horario').style.display = 'block';
+        // ================= DIBUJAR LA LISTA DE MATERIAS =================
+        function renderizarMaterias() {
+            const contenedor = document.getElementById('lista-materias');
+            // Limpiamos excepto el título
+            contenedor.innerHTML = '<h3>Materias Ofertadas</h3>';
+
+            materias.forEach(mat => {
+                const isAgregada = materiasAgregadas.includes(mat.id);
+                
+                let botonHTML = '';
+                let extraClass = '';
+
+                if (isAgregada) {
+                    botonHTML = `<button class="btn btn-remove" onclick="quitarMateria(${mat.id})">Quitar del Horario</button>`;
+                    extraClass = 'agregado';
+                } else if (mat.estado === 'lleno') {
+                    botonHTML = `<button class="btn btn-full" disabled>Cupo Lleno</button>`;
+                    extraClass = 'lleno';
+                } else {
+                    botonHTML = `<button class="btn btn-add" onclick="agregarMateria(${mat.id})">Agregar al Horario</button>`;
+                }
+
+                contenedor.innerHTML += `
+                    <div class="clase-card ${extraClass}">
+                        <h4>${mat.codigo}</h4>
+                        <p><strong>${mat.nombre}</strong></p>
+                        <p>👤 Prof: ${mat.profesor}</p>
+                        <p>🕒 ${mat.bloques.length} horas a la semana</p>
+                        ${botonHTML}
+                    </div>
+                `;
+            });
+
+            // Actualizar contador visual
+            document.getElementById('contador-creditos').innerText = materiasAgregadas.length;
         }
+
+        // ================= LÓGICA: AGREGAR Y QUITAR =================
+        function agregarMateria(idMateria) {
+            const mat = materias.find(m => m.id === idMateria);
+            
+            // Verificar colisiones (choque de horarios)
+            let hayChoque = false;
+            mat.bloques.forEach(bloque => {
+                const celda = document.getElementById(bloque);
+                if (celda.innerHTML !== '') hayChoque = true;
+            });
+
+            if (hayChoque) {
+                alert("¡Ups! Esta materia choca con otra que ya tienes en tu horario.");
+                return;
+            }
+
+            // Pintar en el horario
+            mat.bloques.forEach(bloque => {
+                const celda = document.getElementById(bloque);
+                celda.innerHTML = `<strong>${mat.codigo}</strong><br>${mat.nombre}`;
+                celda.className = `celda ${mat.colorClass}`; // Le pone el color
+            });
+
+            materiasAgregadas.push(idMateria);
+            renderizarMaterias(); // Recargar la lista de la izquierda
+        }
+
+        function quitarMateria(idMateria) {
+            const mat = materias.find(m => m.id === idMateria);
+            
+            // Despintar en el horario
+            mat.bloques.forEach(bloque => {
+                const celda = document.getElementById(bloque);
+                celda.innerHTML = '';
+                celda.className = 'celda'; // Vuelve a ser blanca
+            });
+
+            // Quitar del array
+            materiasAgregadas = materiasAgregadas.filter(id => id !== idMateria);
+            renderizarMaterias(); // Recargar la lista de la izquierda
+        }
+
+        // ================= INICIAR APP =================
+        inicializarHorario();
+        renderizarMaterias();
+
     </script>
 </body>
 </html>
