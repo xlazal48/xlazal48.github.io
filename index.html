@@ -3,93 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horario 3D con Shaders y Agua Realista</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    
-    <script>
-        // Shader de los bloques (Neon)
-        AFRAME.registerShader('neon-animado', {
-            schema: { timeMsec: {type: 'time', is: 'uniform'} },
-            vertexShader: `
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                varying vec2 vUv;
-                uniform float timeMsec;
-                void main() {
-                    float time = timeMsec / 1000.0;
-                    float wave = sin(vUv.y * 15.0 + time * 3.0) * 0.5 + 0.5;
-                    float wave2 = cos(vUv.x * 10.0 - time * 2.0) * 0.5 + 0.5;
-                    vec3 color1 = vec3(0.0, 1.0, 1.0); 
-                    vec3 color2 = vec3(1.0, 0.0, 1.0); 
-                    vec3 finalColor = mix(color1, color2, wave * wave2);
-                    gl_FragColor = vec4(finalColor, 0.9); 
-                }
-            `
-        });
+    <title>Sistema de Inscripciones</title>
+    <style>
+        /* ================= ESTILOS GENERALES ================= */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
 
-        // Script para los botones
-        AFRAME.registerComponent('boton-horario', {
-            init: function () {
-                let el = this.el;
-                el.addEventListener('click', function () {
-                    let horarioElegido = el.getAttribute('data-horario');
-                    alert("¡Elegiste: " + horarioElegido + "!");
-                });
-                el.addEventListener('mouseenter', function () { el.setAttribute('scale', '1.1 1.1 1.1'); });
-                el.addEventListener('mouseleave', function () { el.setAttribute('scale', '1 1 1'); });
-            }
-        });
+        .top-bar {
+            background-color: #e65c00; /* Naranja estilo UPSLP */
+            height: 15px;
+            width: 100%;
+        }
 
-        // NUEVO: Script para darle movimiento a las olas del agua
-        AFRAME.registerComponent('corriente-agua', {
-            tick: function () {
-                let material = this.el.getObject3D('mesh').material;
-                // Si el material y el mapa de ruido ya cargaron, los movemos en diagonal
-                if (material && material.normalMap) {
-                    material.normalMap.offset.x += 0.0005;
-                    material.normalMap.offset.y += 0.0005;
-                }
-            }
-        });
-    </script>
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+
+        /* Botones generales */
+        .btn-blue {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        
+        .btn-blue:hover { background-color: #004494; }
+
+        .btn-outline {
+            background: white;
+            color: #0056b3;
+            border: 1px solid #0056b3;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* ================= VISTA 1: HORARIO ================= */
+        .header-horario {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .carrera-titulo {
+            font-size: 18px;
+            color: #222;
+            margin: 0;
+        }
+
+        .carrera-subtitulo {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Cuadrícula del horario (CSS Grid) */
+        .horario-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(5, 1fr);
+            grid-template-rows: 40px repeat(8, 60px); /* Cabecera + 8 horas */
+            gap: 2px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+        }
+
+        .celda-header {
+            background: #f8f9fa;
+            text-align: center;
+            font-weight: bold;
+            padding-top: 10px;
+            font-size: 14px;
+        }
+
+        .celda-hora {
+            background: white;
+            text-align: right;
+            padding-right: 5px;
+            font-size: 12px;
+            color: #666;
+            padding-top: 5px;
+        }
+
+        .clase-bloque {
+            background: white;
+            border-left: 4px solid #00a65a; /* Borde verde */
+            padding: 5px;
+            font-size: 11px;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* ================= VISTA 2: CARRITO / BUSCADOR ================= */
+        #vista-carrito {
+            display: none; /* Oculto por defecto */
+        }
+
+        .layout-carrito {
+            display: flex;
+            gap: 20px;
+        }
+
+        .panel-izquierdo {
+            flex: 2;
+        }
+
+        .panel-derecho {
+            flex: 1;
+        }
+
+        .buscador-caja {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .input-busqueda {
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        /* Tarjetas de las clases disponibles */
+        .clase-disponible {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            background: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clase-info h4 { margin: 0 0 5px 0; color: #0056b3; }
+        .clase-info p { margin: 3px 0; font-size: 14px; color: #444; }
+
+        .alerta-naranja {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-left: 4px solid #e65c00;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .widget-horario {
+            border: 1px solid #ccc;
+            border-top: 4px solid #e65c00;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            background: white;
+        }
+
+    </style>
 </head>
 <body>
-    <a-scene shadow="type: pcfsoft">
+
+    <div class="top-bar"></div>
+
+    <!-- ========================================== -->
+    <!-- VISTA 1: EL HORARIO PRINCIPAL              -->
+    <!-- ========================================== -->
+    <div class="container" id="vista-horario">
+        <div class="header-horario">
+            <div>
+                <select style="padding: 5px; margin-bottom: 15px;">
+                    <option>Período 2026/20262C</option>
+                </select>
+                <h2 class="carrera-titulo">Licenciatura en Ingeniería en Manufactura Avanzada</h2>
+                <p class="carrera-subtitulo">Escolarizada, Licenciatura</p>
+            </div>
+            <div>
+                <!-- Este botón dispara la función de JS para cambiar de pantalla -->
+                <button class="btn-blue" onclick="cambiarVista()">VER CARRITO</button>
+            </div>
+        </div>
+
+        <!-- Grid del Horario -->
+        <div class="horario-grid">
+            <!-- Cabeceras de Días -->
+            <div class="celda-header"></div>
+            <div class="celda-header">lunes</div>
+            <div class="celda-header">martes</div>
+            <div class="celda-header">miércoles</div>
+            <div class="celda-header">jueves</div>
+            <div class="celda-header">viernes</div>
+
+            <!-- Fila 7:00 -->
+            <div class="celda-hora">7:00</div>
+            <div class="clase-bloque">T-DPTD-1M: Desarrollo del pens. y toma de...</div>
+            <div class="clase-bloque">T-DPTD-1M: Desarrollo del pens. y toma de...</div>
+            <div class="clase-bloque">T-DPTD-1M: Desarrollo del pens. y toma de...</div>
+            <div class="clase-bloque">T-DPTD-1M: Desarrollo del pens. y toma de...</div>
+            <div style="background: white;"></div> <!-- Viernes libre a las 7 -->
+
+            <!-- Fila 8:00 -->
+            <div class="celda-hora">8:00</div>
+            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
+            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
+            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
+            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
+            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
+
+            <!-- Fila 9:00 -->
+            <div class="celda-hora">9:00</div>
+            <div class="clase-bloque">E-PIN1-1M: Proyecto integrador I</div>
+            <div class="clase-bloque">E-PIN1-1M: Proyecto integrador I</div>
+            <div class="clase-bloque">E-PIN1-1M: Proyecto integrador I</div>
+            <div class="clase-bloque">E-PIN1-1M: Proyecto integrador I</div>
+            <div class="clase-bloque">E-CCA-1M: Control de calidad</div>
+
+            <!-- Fila 10:00 -->
+            <div class="celda-hora">10:00</div>
+            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
+            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
+            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
+            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
+            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
+
+            <!-- Fila 11:00 -->
+            <div class="celda-hora">11:00</div>
+            <div style="background: white;"></div>
+            <div style="background: white;"></div>
+            <div style="background: white;"></div>
+            <div style="background: white;"></div>
+            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
+
+            <!-- Fila 12:00 -->
+            <div class="celda-hora">12:00</div>
+            <div class="clase-bloque">B-CIN-1M: Cálculo integral</div>
+            <div class="clase-bloque">B-CIN-1M: Cálculo integral</div>
+            <div class="clase-bloque">B-CIN-1M: Cálculo integral</div>
+            <div class="clase-bloque">B-CIN-1M: Cálculo integral</div>
+            <div class="clase-bloque">E-PFA1-1M: Procesos de fabricación I</div>
+
+            <!-- Fila 13:00 -->
+            <div class="celda-hora">13:00</div>
+            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
+            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
+            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
+            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
+            <div class="clase-bloque">E-DIIN-1M: Dibujo industrial</div>
+
+            <!-- Fila 14:00 -->
+            <div class="celda-hora">14:00</div>
+            <div style="background: white;"></div>
+            <div style="background: white;"></div>
+            <div style="background: white;"></div>
+            <div style="background: white;"></div>
+            <div style="background: white;"></div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- VISTA 2: BUSCADOR DE CLASES Y CARRITO      -->
+    <!-- ========================================== -->
+    <div class="container" id="vista-carrito">
+        <button class="btn-outline" onclick="volverHorario()" style="margin-bottom: 20px;">← Volver a mi horario</button>
+        <h2>Cursos</h2>
         
-        <a-assets>
-            <img id="textura-agua" src="https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/waternormals.jpg" crossorigin="anonymous">
-        </a-assets>
+        <div class="layout-carrito">
+            <!-- Panel Izquierdo: Buscador y Lista de Materias -->
+            <div class="panel-izquierdo">
+                <div class="buscador-caja">
+                    <label>Buscar clases de 2026/20261S</label>
+                    <input type="text" class="input-busqueda" placeholder="Buscar materia o profesor...">
+                </div>
 
-        <a-light type="ambient" color="#445"></a-light>
-        <a-light type="directional" position="-2 4 2" intensity="1.5" castShadow="true"></a-light>
-        <a-sky color="#0a0a12"></a-sky>
+                <h3>Clases Disponibles</h3>
+                
+                <!-- Materia 1 -->
+                <div class="clase-disponible">
+                    <div class="clase-info">
+                        <h4>E-CCA-1M: Control de calidad</h4>
+                        <p><strong>Profesor(a):</strong> Ing. Sofía Mendoza</p>
+                        <p><strong>Cupos:</strong> 5 disponibles</p>
+                        <p><strong>Horario:</strong> Lunes a Jueves (8:00 - 9:00), Viernes (8:00 - 10:00)</p>
+                    </div>
+                    <button class="btn-blue">Añadir al carrito</button>
+                </div>
 
-        <a-plane position="0 -0.5 -4" rotation="-90 0 0" width="30" height="30" color="#c2b280"></a-plane>
+                <!-- Materia 2 -->
+                <div class="clase-disponible">
+                    <div class="clase-info">
+                        <h4>T-DPTD-1M: Desarrollo del pens. y toma de decisiones</h4>
+                        <p><strong>Profesor(a):</strong> Dr. Roberto Gómez</p>
+                        <p><strong>Cupos:</strong> 12 disponibles</p>
+                        <p><strong>Horario:</strong> Lunes a Jueves (7:00 - 8:00)</p>
+                    </div>
+                    <button class="btn-blue">Añadir al carrito</button>
+                </div>
 
-        <a-plane position="0 0 -4" rotation="-90 0 0" width="30" height="30" 
-                 material="color: #0088ff; transparent: true; opacity: 0.6; roughness: 0.1; metalness: 0.8; normalMap: #textura-agua; normalTextureRepeat: 15 15"
-                 shadow="receive: true"
-                 corriente-agua>
-        </a-plane>
+                <!-- Materia 3 -->
+                <div class="clase-disponible">
+                    <div class="clase-info">
+                        <h4>E-PFA1-1M: Procesos de fabricación I</h4>
+                        <p><strong>Profesor(a):</strong> Mtro. Carlos Ramírez</p>
+                        <p><strong>Cupos:</strong> Lleno (Lista de espera)</p>
+                        <p><strong>Horario:</strong> Lunes a Viernes (10:00 - 11:00), Viernes (11:00 - 13:00)</p>
+                    </div>
+                    <button class="btn-outline">En espera</button>
+                </div>
 
-        <a-text value="Selecciona tu Horario UPSLP" position="-1.8 3.5 -4" color="#FFFFFF" width="8"></a-text>
+                <!-- Materia 4 -->
+                <div class="clase-disponible">
+                    <div class="clase-info">
+                        <h4>B-CIN-1M: Cálculo integral</h4>
+                        <p><strong>Profesor(a):</strong> Dr. Alejandro Vargas</p>
+                        <p><strong>Cupos:</strong> 3 disponibles</p>
+                        <p><strong>Horario:</strong> Lunes a Jueves (12:00 - 13:00)</p>
+                    </div>
+                    <button class="btn-blue">Añadir al carrito</button>
+                </div>
+            </div>
 
-        <a-box position="-2 1.5 -4" material="shader: neon-animado; transparent: true" shadow="cast: true" boton-horario data-horario="Matutino (7:00 AM - 1:00 PM)">
-            <a-text value="Matutino" position="-0.4 0 0.6" color="white" width="4"></a-text>
-        </a-box>
+            <!-- Panel Derecho: Alerta y Widget de Horario Vacío -->
+            <div class="panel-derecho">
+                <div class="alerta-naranja">
+                    <strong>!</strong> No puede inscribirse a este período en este momento. Intentar otro período o volver más tarde.
+                </div>
+                
+                <div class="widget-horario">
+                    <h4 style="margin: 0 0 20px 0; align-self: flex-start; padding-left: 20px;">🛒 Mi horario</h4>
+                    <div style="font-size: 50px; color: #ff8c00;">📅</div>
+                    <p>Su horario está vacío</p>
+                    
+                    <div style="width: 100%; border-top: 1px solid #eee; margin-top: auto; padding: 15px; display: flex; justify-content: space-between; box-sizing: border-box;">
+                        <span style="font-size: 12px; font-weight: bold;">0<br>Inscrito</span>
+                        <button style="background: #ccc; border: none; padding: 5px 15px; color: white; border-radius: 3px;" disabled>INSCRIBIRSE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <a-box position="2 1.5 -4" material="shader: neon-animado; transparent: true" shadow="cast: true" boton-horario data-horario="Vespertino (2:00 PM - 8:00 PM)">
-            <a-text value="Vespertino" position="-0.5 0 0.6" color="white" width="4"></a-text>
-        </a-box>
+    <!-- ========================================== -->
+    <!-- SCRIPT PARA CAMBIAR DE PANTALLA            -->
+    <!-- ========================================== -->
+    <script>
+        function cambiarVista() {
+            // Oculta el horario y muestra el carrito
+            document.getElementById('vista-horario').style.display = 'none';
+            document.getElementById('vista-carrito').style.display = 'block';
+        }
 
-        <a-camera position="0 1.8 0">
-            <a-cursor color="#FFF"></a-cursor>
-        </a-camera>
-    </a-scene>
+        function volverHorario() {
+            // Oculta el carrito y vuelve al horario
+            document.getElementById('vista-carrito').style.display = 'none';
+            document.getElementById('vista-horario').style.display = 'block';
+        }
+    </script>
 </body>
 </html>
