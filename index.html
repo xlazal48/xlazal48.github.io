@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prototipo V5 - Selección de Grupos UPSLP</title>
+    <title>Prototipo V7 - Bloques de Horarios UPSLP</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* ================= ESTILOS GENERALES ================= */
@@ -38,9 +38,9 @@
             overflow: hidden; 
         }
 
-        /* ================= PANEL BUSCADOR ================= */
-        .panel-buscador {
-            width: 35%;
+        /* ================= PANEL DE BLOQUES PRECARGADOS ================= */
+        .panel-bloques {
+            width: 38%;
             background: white;
             border-radius: 12px;
             padding: 25px;
@@ -49,18 +49,30 @@
             flex-direction: column;
         }
 
-        .buscador-input {
-            width: 100%;
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e0;
-            box-sizing: border-box;
-            font-size: 14px;
-            outline: none;
+        .filtro-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        
-        .buscador-input:focus { border-color: #e65c00; }
+
+        .btn-filtro {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #cbd5e0;
+            background: #f7fafc;
+            color: #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-filtro.active {
+            background: #e65c00;
+            color: white;
+            border-color: #e65c00;
+        }
 
         .lista-scroll {
             overflow-y: auto;
@@ -68,58 +80,70 @@
             padding-right: 5px;
         }
 
-        .clase-card {
-            border: 1px solid #edf2f7;
-            padding: 16px;
+        /* Tarjeta de Bloque de Horario */
+        .horario-card {
+            border: 2px solid #edf2f7;
+            padding: 18px;
             margin-bottom: 16px;
-            border-radius: 10px;
+            border-radius: 12px;
             background: #ffffff;
             transition: all 0.2s ease;
-        }
-
-        .clase-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .clase-card h4 { margin: 0 0 6px 0; color: #1a202c; font-size: 16px; font-weight: 600; }
-        .clase-card p { margin: 4px 0; font-size: 13px; color: #718096; }
-
-        .select-horario {
-            width: 100%;
-            padding: 8px;
-            margin-top: 10px;
-            border-radius: 6px;
-            border: 1px solid #cbd5e0;
-            background-color: #f7fafc;
-            color: #2d3748;
-            font-size: 13px;
-            outline: none;
             cursor: pointer;
         }
-        
-        .select-horario:focus { border-color: #3182ce; }
-        .select-horario:disabled { background-color: #edf2f7; cursor: not-allowed; }
 
-        .btn {
+        .horario-card:hover { 
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08); 
+            border-color: #cbd5e0;
+        }
+
+        .horario-card.selected {
+            border-color: #e65c00;
+            background: #fffaf7;
+        }
+
+        .horario-card h4 { margin: 0 0 6px 0; color: #1a202c; font-size: 16px; font-weight: 700; }
+        .horario-card p { margin: 4px 0; font-size: 13px; color: #4a5568; line-height: 1.4; }
+        
+        /* Indicadores de métricas del bloque */
+        .meta-info {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-corrido { background: #e6f4ea; color: #137333; }
+        .badge-disperso { background: #fef7e0; color: #b06000; }
+        .badge-metric { background: #edf2f7; color: #4a5568; }
+
+        .btn-action {
             padding: 10px 16px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             font-size: 13px;
-            margin-top: 12px;
             width: 100%;
             transition: all 0.2s;
         }
 
-        .btn-add { background: #ebf8ff; color: #3182ce; }
-        .btn-add:hover { background: #3182ce; color: white; }
-        .btn-remove { background: #fff5f5; color: #e53e3e; }
-        .btn-remove:hover { background: #e53e3e; color: white; }
-        .btn-export { background: #e6f4ea; color: #137333; width: auto; margin-top: 0; display: flex; align-items: center; gap: 5px;}
+        .btn-add { background: #e65c00; color: white; }
+        .btn-add:hover { background: #cc5200; }
+        .btn-selected { background: #cbd5e0; color: #4a5568; cursor: not-allowed; }
+        
+        .btn-export { background: #e6f4ea; color: #137333; width: auto; font-weight: 600; border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer;}
         .btn-export:hover { background: #137333; color: white; }
-        .btn-danger-top { width: auto; margin-top: 0; }
 
-        /* ================= CALENDARIO ================= */
+        /* ================= CALENDARIO (7:00 A 16:00 RESTRIGIDO) ================= */
         .panel-horario {
-            width: 65%;
+            width: 62%;
             background: white;
             border-radius: 12px;
             padding: 0; 
@@ -138,8 +162,8 @@
 
         .horario-grid {
             display: grid;
-            grid-template-columns: 60px repeat(5, 1fr);
-            grid-template-rows: 50px repeat(14, 75px); 
+            grid-template-columns: 80px repeat(5, 1fr);
+            grid-template-rows: 50px repeat(9, 72px); 
             background-color: white;
             border: 1px solid #edf2f7;
             border-radius: 8px;
@@ -161,12 +185,13 @@
         .celda-hora {
             text-align: right;
             padding-right: 12px;
-            font-size: 12px;
+            font-size: 11px;
             color: #a0aec0;
-            padding-top: 10px;
+            padding-top: 12px;
             font-weight: 500;
             border-right: 1px solid #edf2f7;
             border-bottom: 1px solid #edf2f7;
+            line-height: 1.4;
         }
 
         .celda {
@@ -174,28 +199,31 @@
             border-bottom: 1px solid #f0f4f8;
             padding: 4px;
             position: relative;
+            background-color: #fafafa; 
         }
+        
+        .celda.ocupada { background-color: white; }
 
         .materia-bloque {
-            height: 90%;
+            height: 95%;
             width: 95%;
             border-radius: 8px;
-            padding: 8px;
+            padding: 6px 8px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: center;
             font-size: 11px;
             line-height: 1.3;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            animation: popIn 0.2s ease-out;
         }
 
-        .materia-bloque strong { font-size: 12px; display: block; margin-bottom: 2px; }
-        .materia-bloque span { opacity: 0.85; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .materia-bloque strong { font-size: 11px; display: block; margin-bottom: 1px; }
+        .materia-bloque span { opacity: 0.9; font-size: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
         @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
+            0% { transform: scale(0.97); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
 
@@ -212,27 +240,30 @@
     <div class="top-bar"></div>
     <div class="header">
         <div>
-            <h2 style="margin:0; color:#1a202c; font-size:22px;">Mi Horario - UPSLP</h2>
-            <p style="margin:4px 0 0 0; color:#718096; font-size:14px;">Ingeniería en Manufactura Avanzada</p>
+            <h2 style="margin:0; color:#1a202c; font-size:22px;">Inscripción por Bloques - UPSLP</h2>
+            <p style="margin:4px 0 0 0; color:#718096; font-size:14px;">Ingeniería en Manufactura Avanzada • Plan de Estudios Cuatrimestral</p>
         </div>
         <div style="display: flex; gap: 15px; align-items: center;">
-            <button class="btn btn-export" onclick="exportarImagen()">📸 Descargar Horario</button>
-            <button class="btn btn-remove btn-danger-top" onclick="limpiarTodo()">🗑️ Borrar Todo</button>
+            <button class="btn-export" onclick="exportarImagen()">Exportar Horario</button>
             <div style="background: #f7fafc; padding: 10px 20px; border-radius: 8px; border: 1px solid #edf2f7;">
-                <span style="color: #4a5568; font-size: 14px;">Materias:</span>
-                <strong style="color: #e65c00; font-size: 18px; margin-left: 8px;" id="contador-creditos">0</strong>
+                <span style="color: #4a5568; font-size: 14px;">Materias Vinculadas:</span>
+                <strong style="color: #e65c00; font-size: 18px; margin-left: 8px;" id="contador-materias">0</strong>
             </div>
         </div>
     </div>
 
     <div class="main-container">
-        <div class="panel-buscador">
-            <h3 style="margin-top:0; color:#2d3748;">Oferta Académica</h3>
-            <input type="text" id="input-busqueda" class="buscador-input" placeholder="🔍 Buscar por código o nombre..." onkeyup="filtrarMaterias()">
+        <div class="panel-bloques">
+            <h3 style="margin-top:0; color:#2d3748; margin-bottom: 5px;">Estructuras de Horarios Precargados</h3>
+            <p style="color:#718096; font-size: 13px; margin-top:0; margin-bottom:15px;">Filtra y compara los bloques institucionales según la densidad de horas libres.</p>
             
-            <div id="lista-materias" class="lista-scroll">
-                <p id="cargando-texto" style="color: #718096; text-align: center; margin-top: 20px;">Cargando materias desde la base de datos...</p>
+            <div class="filtro-container">
+                <button id="filtro-todos" class="btn-filtro active" onclick="filtrarHorarios('todos')">Todos</button>
+                <button id="filtro-corrido" class="btn-filtro" onclick="filtrarHorarios('corrido')">De Corrido</button>
+                <button id="filtro-disperso" class="btn-filtro" onclick="filtrarHorarios('disperso')">Dispersos</button>
             </div>
+            
+            <div id="lista-horarios" class="lista-scroll"></div>
         </div>
 
         <div class="panel-horario" id="area-exportacion">
@@ -244,248 +275,238 @@
     </div>
 
     <script>
-        let materiasBD = []; // Base de datos global simulada
-        let gruposAgregados = JSON.parse(localStorage.getItem('horario_v5')) || [];
+        // ================= CATALOGO OFICIAL DE BLOQUES PRECARGADOS (MINIMO 6 CLASES FIJAS) =================
+        const opcionesHorarios = [
+            {
+                id: "BLOQUE-IMA-01",
+                nombre: "Bloque 101 - Continuo Matutino",
+                tipo: "corrido",
+                horasMuertas: 0,
+                descripcion: "Clases compactadas al inicio del día. Entras a las 7 y terminas temprano sin interrupciones.",
+                rango: "07:00 a 13:00 hrs",
+                clases: [
+                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8"] },
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9", "Viernes-9"] },
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10"] },
+                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11"] },
+                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] }
+                ]
+            },
+            {
+                id: "BLOQUE-IMA-02",
+                nombre: "Bloque 102 - Continuo Vespertino",
+                tipo: "corrido",
+                horasMuertas: 0,
+                descripcion: "Asignación consecutiva en la segunda mitad del rango permitido. Sin ventanas intermedias.",
+                rango: "10:00 a 16:00 hrs",
+                clases: [
+                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10"] },
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11"] },
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12", "Viernes-12"] },
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13"] },
+                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-14", "Martes-14", "Miércoles-14", "Jueves-14"] },
+                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-15", "Martes-15", "Miércoles-15", "Jueves-15"] }
+                ]
+            },
+            {
+                id: "BLOQUE-IMA-03",
+                nombre: "Bloque 103 - Alternado Ventana Fija",
+                tipo: "disperso",
+                horasMuertas: 5,
+                descripcion: "Distribución regular con una hora libre fija todos los días a las 10:00 AM para descanso o talleres.",
+                rango: "07:00 a 14:00 hrs",
+                clases: [
+                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8"] },
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9", "Viernes-9"] },
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11"] },
+                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] },
+                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13"] }
+                ]
+            },
+            {
+                id: "BLOQUE-IMA-04",
+                nombre: "Bloque 104 - Dispersión Intermedia",
+                tipo: "disperso",
+                horasMuertas: 10,
+                descripcion: "Esquema extendido con múltiples ventanas intercaladas. Máxima separación entre sesiones teóricas.",
+                rango: "07:00 a 16:00 hrs",
+                clases: [
+                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-7", "Miércoles-7", "Viernes-7"] },
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-9", "Miércoles-9", "Viernes-9"] },
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-11", "Miércoles-11", "Viernes-11"] },
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Martes-8", "Jueves-8", "Viernes-12"] },
+                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Martes-10", "Jueves-10", "Viernes-14"] },
+                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Martes-13", "Jueves-13", "Viernes-15"] }
+                ]
+            },
+            {
+                id: "BLOQUE-IMA-05",
+                nombre: "Bloque 105 - Continuo Escalonado",
+                tipo: "corrido",
+                horasMuertas: 0,
+                descripcion: "Bloque compacto sin ventanas. Los días lunes entras tarde y los viernes sales muy temprano.",
+                rango: "08:00 a 15:00 hrs",
+                clases: [
+                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-9", "Martes-8", "Miércoles-8", "Jueves-8"] },
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-10", "Martes-9", "Miércoles-9", "Jueves-9"] },
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-11", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-7"] },
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-12", "Martes-11", "Miércoles-11", "Jueves-11", "Viernes-8"] },
+                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-13", "Martes-12", "Miércoles-12", "Jueves-12", "Viernes-9"] },
+                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-14", "Martes-13", "Miércoles-13", "Jueves-13", "Viernes-10"] }
+                ]
+            },
+            {
+                id: "BLOQUE-IMA-06",
+                nombre: "Bloque 106 - Ventanas de Fin de Semana",
+                tipo: "disperso",
+                horasMuertas: 6,
+                descripcion: "Estructura compacta de lunes a jueves, pero con carga dispersa y horas libres los viernes.",
+                rango: "07:00 a 15:00 hrs",
+                clases: [
+                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8"] },
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9", "Viernes-7"] },
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-9"] },
+                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11", "Viernes-11"] },
+                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12", "Viernes-13"] }
+                ]
+            }
+        ];
 
-        // ================= SIMULACIÓN DE LLAMADA API =================
-        async function fetchMateriasAPI() {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve([
-                        { 
-                            codigo: "T-DPTD-1M", 
-                            nombre: "Desarrollo del pens. y toma de decisiones", 
-                            colorClass: "color-1",
-                            grupos: [
-                                { idGrupo: "DPTD-G1", prof: "Dr. Roberto Gómez", horario: "07:00 a 08:00 hrs", estado: "disponible", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
-                                { idGrupo: "DPTD-G2", prof: "Sin Asignar", horario: "16:00 a 17:00 hrs", estado: "lleno", bloques: ["Lunes-16", "Martes-16", "Miércoles-16", "Jueves-16"] }
-                            ]
-                        },
-                        { 
-                            codigo: "E-CCA-1M", 
-                            nombre: "Control de calidad", 
-                            colorClass: "color-2",
-                            grupos: [
-                                { idGrupo: "CCA-G1", prof: "Ing. Sofía Mendoza", horario: "08:00 a 09:00 hrs", estado: "disponible", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8", "Viernes-8"] },
-                                { idGrupo: "CCA-G2", prof: "Dr. Arturo Torres", horario: "18:00 a 19:00 hrs", estado: "disponible", bloques: ["Lunes-18", "Martes-18", "Miércoles-18", "Jueves-18", "Viernes-18"] }
-                            ]
-                        },
-                        { 
-                            codigo: "B-CIN-1M", 
-                            nombre: "Cálculo integral", 
-                            colorClass: "color-4",
-                            grupos: [
-                                { idGrupo: "CIN-G1", prof: "Dr. Alejandro Vargas", horario: "12:00 a 13:00 hrs", estado: "lleno", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] },
-                                { idGrupo: "CIN-G2", prof: "Mtra. Elena Ruiz", horario: "14:00 a 15:00 hrs", estado: "disponible", bloques: ["Lunes-14", "Martes-14", "Miércoles-14", "Jueves-14"] }
-                            ]
-                        },
-                        { 
-                            codigo: "E-PFA1-1M", 
-                            nombre: "Procesos de fabricación I", 
-                            colorClass: "color-6",
-                            grupos: [
-                                { idGrupo: "PFA-G1", prof: "Ing. Valeria Santos", horario: "10:00 a 12:00 hrs", estado: "disponible", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-10", "Viernes-11"] }
-                            ]
-                        }
-                    ]);
-                }, 600); // Simulamos 600ms de retraso de red
-            });
-        }
+        let idHorarioSeleccionado = localStorage.getItem('bloque_seleccionado_v7') || null;
+        let filtroActual = 'todos';
 
-        // ================= DIBUJAR LA CUADRÍCULA =================
-        function inicializarHorario() {
+        // ================= CONSTRUIR CUADRÍCULA ESTÁTICA (7 AM A 4 PM RESTRINGIDO) =================
+        function inicializarHorarioGrid() {
             const grid = document.getElementById('cuadricula');
             const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
             
             grid.innerHTML = `<div class="celda-header"></div>`;
             dias.forEach(dia => grid.innerHTML += `<div class="celda-header">${dia}</div>`);
 
-            for (let hora = 7; hora <= 20; hora++) {
-                grid.innerHTML += `<div class="celda-hora">${hora}:00</div>`;
+            // Rango solicitado: de 7 a 16 hrs (El bloque de las 15:00 concluye a las 16:00)
+            for (let hora = 7; hora <= 15; hora++) {
+                let inicio = hora < 10 ? `0${hora}:00` : `${hora}:00`;
+                let fin = (hora + 1) < 10 ? `0${hora+1}:00` : `${hora+1}:00`;
+                
+                grid.innerHTML += `<div class="celda-hora">${inicio}<br><span style="font-size:10px;color:#a0aec0;">a ${fin}</span></div>`;
                 dias.forEach(dia => grid.innerHTML += `<div class="celda" id="${dia}-${hora}"></div>`);
             }
         }
 
-        // ================= SISTEMA DE FILTRADO Y RENDERIZADO =================
-        function filtrarMaterias() {
-            const termino = document.getElementById('input-busqueda').value.toLowerCase();
-            const materiasFiltradas = materiasBD.filter(mat => 
-                mat.codigo.toLowerCase().includes(termino) || 
-                mat.nombre.toLowerCase().includes(termino)
-            );
-            renderizarMaterias(materiasFiltradas);
+        // ================= FILTRADO Y RENDERIZADO DE TARJETAS DE BLOQUES =================
+        function filtrarHorarios(tipo) {
+            filtroActual = tipo;
+            
+            document.querySelectorAll('.btn-filtro').forEach(btn => btn.classList.remove('active'));
+            if (tipo === 'todos') document.getElementById('filtro-todos').classList.add('active');
+            if (tipo === 'corrido') document.getElementById('filtro-corrido').classList.add('active');
+            if (tipo === 'disperso') document.getElementById('filtro-disperso').classList.add('active');
+
+            const filtrados = opcionesHorarios.filter(h => tipo === 'todos' || h.tipo === tipo);
+            renderizarListaBloques(filtrados);
         }
 
-        function renderizarMaterias(listaRender) {
-            const contenedor = document.getElementById('lista-materias');
-            contenedor.innerHTML = ''; // Limpiar lista
-            
-            let contadorAgregadas = 0;
-            
-            // Contar el total basado en la base completa, no en la lista filtrada
-            materiasBD.forEach(mat => {
-                const isAgregadaGlobal = mat.grupos.find(g => gruposAgregados.includes(g.idGrupo));
-                if(isAgregadaGlobal) contadorAgregadas++;
-            });
-            document.getElementById('contador-creditos').innerText = contadorAgregadas;
+        function renderizarListaBloques(lista) {
+            const contenedor = document.getElementById('lista-horarios');
+            contenedor.innerHTML = '';
 
-            if (listaRender.length === 0) {
-                contenedor.innerHTML = '<p style="color: #718096; text-align: center; margin-top: 15px;">No se encontraron materias.</p>';
-                return;
-            }
-
-            listaRender.forEach(mat => {
-                const grupoElegido = mat.grupos.find(g => gruposAgregados.includes(g.idGrupo));
-                const isAgregada = !!grupoElegido; 
-
-                let opcionesHTML = '';
-                mat.grupos.forEach(g => {
-                    let disabledStr = g.estado === 'lleno' ? 'disabled' : '';
-                    let textoEstado = g.estado === 'lleno' ? '(Lleno)' : '';
-                    let selectedStr = (isAgregada && grupoElegido.idGrupo === g.idGrupo) ? 'selected' : '';
-                    opcionesHTML += `<option value="${g.idGrupo}" ${disabledStr} ${selectedStr}>${g.horario} - ${g.prof} ${textoEstado}</option>`;
-                });
-
-                let controlHTML = '';
-                if (isAgregada) {
-                    controlHTML = `
-                        <select class="select-horario" disabled>${opcionesHTML}</select>
-                        <button class="btn btn-remove" onclick="quitarMateria('${mat.codigo}', '${grupoElegido.idGrupo}')">Quitar del horario</button>
-                    `;
-                } else {
-                    controlHTML = `
-                        <select class="select-horario" id="select-${mat.codigo}">${opcionesHTML}</select>
-                        <button class="btn btn-add" onclick="agregarMateria('${mat.codigo}')">+ Confirmar y Agregar</button>
-                    `;
-                }
+            lista.forEach(horario => {
+                const esActivo = horario.id === idHorarioSeleccionado;
+                const tipoTexto = horario.tipo === 'corrido' ? 'De Corrido' : 'Disperso';
+                const claseBadge = horario.tipo === 'corrido' ? 'badge-corrido' : 'badge-disperso';
 
                 contenedor.innerHTML += `
-                    <div class="clase-card" style="${isAgregada ? 'border-color: #cbd5e0; background: #f7fafc;' : ''}">
-                        <h4>${mat.codigo}</h4>
-                        <p style="color:#2d3748; font-weight:500;">${mat.nombre}</p>
-                        ${controlHTML}
+                    <div class="horario-card ${esActivo ? 'selected' : ''}" onclick="seleccionarBloque('${horario.id}')">
+                        <div class="meta-info">
+                            <span class="badge ${claseBadge}">${tipoTexto}</span>
+                            <span class="badge badge-metric">Horas Libres: ${horario.horasMuertas}h</span>
+                        </div>
+                        <h4>${horario.nombre}</h4>
+                        <p><strong>Ventana de Permanencia:</strong> ${horario.rango}</p>
+                        <p style="color: #718096; font-size: 12px; margin-top:6px;">${horario.descripcion}</p>
+                        <button style="margin-top:12px;" class="btn-action ${esActivo ? 'btn-selected' : 'btn-add'}">
+                            ${esActivo ? 'Paquete Seleccionado' : 'Cargar Bloque Completo'}
+                        </button>
                     </div>
                 `;
             });
         }
 
-        function cargarMateriasEnGrid() {
-            gruposAgregados.forEach(idGrupo => {
-                materiasBD.forEach(mat => {
-                    const grupoInfo = mat.grupos.find(g => g.idGrupo === idGrupo);
-                    if (grupoInfo) {
-                        grupoInfo.bloques.forEach(bloque => {
-                            const celda = document.getElementById(bloque);
-                            if (celda) {
-                                celda.innerHTML = `
-                                    <div class="materia-bloque ${mat.colorClass}">
-                                        <strong>${mat.codigo}</strong>
-                                        <span>${mat.nombre}</span>
-                                    </div>
-                                `;
-                            }
-                        });
-                    }
-                });
-            });
-        }
-
-        // ================= LÓGICA DE AGREGAR Y QUITAR =================
-        function agregarMateria(codigoMateria) {
-            const selector = document.getElementById(`select-${codigoMateria}`);
-            const idGrupoSeleccionado = selector.value;
-            
-            let mat = materiasBD.find(m => m.codigo === codigoMateria);
-            let grupoInfo = mat.grupos.find(g => g.idGrupo === idGrupoSeleccionado);
-
-            // Validar choques
-            let hayChoque = false;
-            grupoInfo.bloques.forEach(bloque => {
-                if (document.getElementById(bloque).innerHTML !== '') hayChoque = true;
+        // ================= CARGAR EL BLOQUE SELECCIONADO EN EL MAPA VISUAL =================
+        function pintarBloqueEnGrid() {
+            // Resetear celdas de la cuadricula
+            document.querySelectorAll('.celda').forEach(celda => {
+                celda.innerHTML = '';
+                celda.classList.remove('ocupada');
             });
 
-            if (hayChoque) {
-                alert("¡Ups! Ese horario choca con otra clase que ya seleccionaste.");
+            if (!idHorarioSeleccionado) {
+                document.getElementById('contador-materias').innerText = '0';
                 return;
             }
 
-            // Pintar en el calendario
-            grupoInfo.bloques.forEach(bloque => {
-                document.getElementById(bloque).innerHTML = `
-                    <div class="materia-bloque ${mat.colorClass}">
-                        <strong>${mat.codigo}</strong>
-                        <span>${mat.nombre}</span>
-                    </div>
-                `;
-            });
-
-            gruposAgregados.push(idGrupoSeleccionado);
-            localStorage.setItem('horario_v5', JSON.stringify(gruposAgregados));
-            
-            filtrarMaterias(); // Re-renderizar manteniendo la búsqueda actual
-        }
-
-        function quitarMateria(codigoMateria, idGrupo) {
-            let mat = materiasBD.find(m => m.codigo === codigoMateria);
-            let grupoInfo = mat.grupos.find(g => g.idGrupo === idGrupo);
-            
-            // Borrar
-            grupoInfo.bloques.forEach(bloque => { document.getElementById(bloque).innerHTML = ''; });
-            
-            // Actualizar memoria
-            gruposAgregados = gruposAgregados.filter(id => id !== idGrupo);
-            localStorage.setItem('horario_v5', JSON.stringify(gruposAgregados));
-            
-            filtrarMaterias();
-        }
-
-        function limpiarTodo() {
-            if(confirm("¿Seguro que quieres vaciar tu horario?")) {
-                gruposAgregados.forEach(idGrupo => {
-                    materiasBD.forEach(mat => {
-                        const grupoInfo = mat.grupos.find(g => g.idGrupo === idGrupo);
-                        if(grupoInfo) {
-                            grupoInfo.bloques.forEach(bloque => { document.getElementById(bloque).innerHTML = ''; });
+            const paquete = opcionesHorarios.find(h => h.id === idHorarioSeleccionado);
+            if (paquete) {
+                paquete.clases.forEach(materia => {
+                    materia.bloques.forEach(bloqueId => {
+                        const celda = document.getElementById(bloqueId);
+                        if (celda) {
+                            celda.classList.add('ocupada');
+                            celda.innerHTML = `
+                                <div class="materia-bloque ${materia.color} ">
+                                    <strong>${materia.codigo}</strong>
+                                    <span>${materia.nombre}</span>
+                                </div>
+                            `;
                         }
                     });
                 });
-                gruposAgregados = [];
-                localStorage.setItem('horario_v5', JSON.stringify(gruposAgregados));
-                filtrarMaterias();
+                // Actualiza dinámicamente reflejando las 6 clases obligatorias cargadas del tirón
+                document.getElementById('contador-materias').innerText = paquete.clases.length;
             }
         }
 
-        // ================= EXPORTACIÓN DE IMAGEN =================
-        function exportarImagen() {
-            const panelHorario = document.getElementById('area-exportacion');
+        function seleccionarBloque(idPaquete) {
+            idHorarioSeleccionado = idPaquete;
+            localStorage.setItem('bloque_seleccionado_v7', idHorarioSeleccionado);
             
-            // Opcional: Expandir el div momentáneamente para asegurar que capture todo el scroll
-            const originalOverflow = panelHorario.querySelector('.horario-scroll').style.overflow;
-            panelHorario.querySelector('.horario-scroll').style.overflow = 'visible';
+            filtrarHorarios(filtroActual);
+            pintarBloqueEnGrid();
+        }
 
-            html2canvas(panelHorario, {
-                scale: 2, // Mejor resolución
+        // ================= EXPORTAR GENERACIÓN DE IMAGEN =================
+        function exportarImagen() {
+            if(!idHorarioSeleccionado){
+                alert("Selecciona una estructura de bloque antes de exportar.");
+                return;
+            }
+            const areaVisual = document.getElementById('area-exportacion');
+
+            html2canvas(areaVisual, {
+                scale: 2, 
                 backgroundColor: "#ffffff",
                 logging: false
             }).then(canvas => {
-                panelHorario.querySelector('.horario-scroll').style.overflow = originalOverflow; // Restaurar scroll
-
-                const link = document.createElement('a');
-                link.download = 'Mi_Horario_UPSLP.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+                const archivo = document.createElement('a');
+                archivo.download = `Horario_UPSLP_${idHorarioSeleccionado}.png`;
+                archivo.href = canvas.toDataURL('image/png');
+                archivo.click();
             });
         }
 
         // ================= START =================
-        async function arrancarAplicacion() {
-            inicializarHorario();
-            materiasBD = await fetchMateriasAPI(); // Simulamos la carga asíncrona
-            cargarMateriasEnGrid(); 
-            renderizarMaterias(materiasBD);
+        function ejecutarCarga() {
+            inicializarHorarioGrid();
+            filtrarHorarios('todos');
+            if (idHorarioSeleccionado) {
+                pintarBloqueEnGrid();
+            }
         }
 
-        arrancarAplicacion();
+        window.onload = ejecutarCarga;
     </script>
 </body>
 </html>
