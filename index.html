@@ -6,7 +6,7 @@
     <title>Inscripción por Bloques UPSLP</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* ================= ESTILOS GENERALES Y FUENTE BANNER ================= */
+        /* ================= ESTILOS GENERALES Y FUENTE ================= */
         body {
             font-family: Arial, Helvetica, sans-serif;
             background-color: #f4f5f7;
@@ -32,6 +32,12 @@
 
         .header h2 { margin: 0; color: #002B5C; font-size: 22px; }
         .header p { margin: 4px 0 0 0; color: #555; font-size: 14px; }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
 
         .main-container {
             display: flex;
@@ -60,7 +66,6 @@
             margin-top: 10px;
         }
 
-        /* Tarjeta de Bloque de Horario */
         .horario-card {
             border: 1px solid #ccc;
             padding: 16px;
@@ -122,12 +127,26 @@
             color: #333; 
             border: 1px solid #ccc; 
             border-radius: 4px; 
-            padding: 8px 16px; 
+            padding: 10px 16px; 
             cursor: pointer;
             font-weight: bold;
             font-size: 13px;
         }
         .btn-export:hover { background: #e9ecef; }
+
+        .btn-confirm {
+            background: #F26F22;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background 0.2s;
+        }
+        .btn-confirm:hover { background: #d95e1a; }
 
         /* ================= CALENDARIO ================= */
         .panel-horario {
@@ -143,8 +162,10 @@
         }
 
         .horario-header-fijo { padding: 20px 25px 0 25px; }
+        
         .horario-scroll {
             overflow-y: auto; 
+            overflow-x: auto;
             padding: 0 25px 25px 25px;
             flex: 1;
         }
@@ -155,6 +176,7 @@
             grid-template-rows: 40px repeat(10, 65px); 
             background-color: white;
             border: 1px solid #ddd;
+            min-width: 700px; /* Obliga el scroll horizontal en móviles */
         }
 
         .celda-header {
@@ -209,7 +231,6 @@
         .materia-bloque strong { font-size: 11px; display: block; margin-bottom: 2px; }
         .materia-bloque span { opacity: 0.9; font-size: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* Colores institucionales sobrios */
         .color-1 { background-color: #e8f0fe; color: #003366; border-left-color: #003366; } 
         .color-2 { background-color: #e6f4ea; color: #137333; border-left-color: #137333; } 
         .color-3 { background-color: #fce8e6; color: #c5221f; border-left-color: #c5221f; } 
@@ -217,6 +238,71 @@
         .color-5 { background-color: #f3e8fd; color: #681da8; border-left-color: #681da8; } 
         .color-6 { background-color: #e4f7fb; color: #00838f; border-left-color: #00838f; } 
         .color-7 { background-color: #f0e6dd; color: #8a5a44; border-left-color: #8a5a44; } 
+
+        /* ================= MODAL DE CONFIRMACIÓN ================= */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            border-top: 5px solid #137333;
+        }
+
+        .modal-content h2 { color: #137333; margin-top: 0; }
+        .modal-content p { color: #555; line-height: 1.5; font-size: 14px; }
+        .btn-modal {
+            background: #002B5C;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        /* ================= DISEÑO RESPONSIVO (MÓVILES) ================= */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+            .btn-confirm {
+                width: 100%;
+                text-align: center;
+            }
+            .main-container {
+                flex-direction: column;
+                padding: 15px 20px;
+                overflow-y: auto;
+            }
+            .panel-bloques, .panel-horario {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .panel-bloques { max-height: 400px; } /* Limita el alto de la lista en celular */
+        }
     </style>
 </head>
 <body>
@@ -227,20 +313,20 @@
             <h2>Selección de Horario</h2>
             <p>Ingeniería en Manufactura Avanzada • Periodo Cuatrimestral</p>
         </div>
-        <div style="display: flex; gap: 15px; align-items: center;">
+        <div class="header-actions">
             <button class="btn-export" onclick="exportarImagen()">Imprimir Horario</button>
             <div style="background: #f9f9f9; padding: 8px 15px; border: 1px solid #ddd; border-radius: 4px;">
-                <span style="color: #555; font-size: 13px;">Materias en bloque:</span>
+                <span style="color: #555; font-size: 13px;">Materias:</span>
                 <strong style="color: #002B5C; font-size: 16px; margin-left: 5px;" id="contador-materias">0</strong>
             </div>
+            <button class="btn-confirm" onclick="confirmarInscripcion()">Confirmar Inscripción</button>
         </div>
     </div>
 
     <div class="main-container">
         <div class="panel-bloques">
             <h3 style="margin-top:0; color:#002B5C; font-size: 16px;">Bloques Disponibles Asignados</h3>
-            <p style="color:#666; font-size: 12px; margin-top:0; margin-bottom:10px;">Los bloques mostrados corresponden a tu validación académica y requerimiento de idioma.</p>
-            
+            <p style="color:#666; font-size: 12px; margin-top:0; margin-bottom:10px;">Los bloques mostrados corresponden a tu validación académica.</p>
             <div id="lista-horarios" class="lista-scroll"></div>
         </div>
 
@@ -252,9 +338,17 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div class="modal-overlay" id="modal-confirmacion">
+        <div class="modal-content">
+            <h2>Inscripción Exitosa</h2>
+            <p>Tu carga de materias ha sido registrada y subida al sistema correctamente. Ya formas parte de los grupos correspondientes.</p>
+            <button class="btn-modal" onclick="cerrarModal()">Entendido</button>
+        </div>
+    </div>
+
     <script>
-        // ================= BLOQUES REALES (BASADO EN MAPA CURRICULAR Y RETÍCULA) =================
-        // Se asume que el backend ya detectó si lleva inglés o no. Aquí se listan bloques cerrados.
+        // ================= BLOQUES REALES =================
         const opcionesHorarios = [
             {
                 id: "BLOQUE-IMA-A",
@@ -305,7 +399,7 @@
             }
         ];
 
-        let idHorarioSeleccionado = localStorage.getItem('bloque_seleccionado_v8') || null;
+        let idHorarioSeleccionado = localStorage.getItem('bloque_seleccionado_v9') || null;
 
         function inicializarHorarioGrid() {
             const grid = document.getElementById('cuadricula');
@@ -314,13 +408,12 @@
             grid.innerHTML = `<div class="celda-header"></div>`;
             dias.forEach(dia => grid.innerHTML += `<div class="celda-header">${dia}</div>`);
 
-            // Rango horario ampliado de 7:00 a 16:00
             for (let hora = 7; hora <= 16; hora++) {
                 let inicio = hora < 10 ? `0${hora}:00` : `${hora}:00`;
                 let fin = (hora + 1) < 10 ? `0${hora+1}:00` : `${hora+1}:00`;
                 
                 grid.innerHTML += `<div class="celda-hora">${inicio}<br><span style="font-size:9px;color:#999;">a ${fin}</span></div>`;
-                // Capitalizar primera letra para coincidir con los IDs del JSON
+                
                 dias.forEach(dia => {
                     let diaCapitalizado = dia.charAt(0).toUpperCase() + dia.slice(1);
                     if (diaCapitalizado === 'Miércoles') diaCapitalizado = 'Miércoles';
@@ -385,10 +478,23 @@
 
         function seleccionarBloque(idPaquete) {
             idHorarioSeleccionado = idPaquete;
-            localStorage.setItem('bloque_seleccionado_v8', idHorarioSeleccionado);
+            localStorage.setItem('bloque_seleccionado_v9', idHorarioSeleccionado);
             
             renderizarListaBloques();
             pintarBloqueEnGrid();
+        }
+
+        function confirmarInscripcion() {
+            if (!idHorarioSeleccionado) {
+                alert("Por favor, selecciona un bloque de horario antes de confirmar tu inscripción.");
+                return;
+            }
+            // Muestra el modal de confirmación
+            document.getElementById('modal-confirmacion').style.display = 'flex';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-confirmacion').style.display = 'none';
         }
 
         function exportarImagen() {
