@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prototipo V7 - Bloques de Horarios UPSLP</title>
+    <title>Inscripción por Bloques UPSLP</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* ================= ESTILOS GENERALES ================= */
+        /* ================= ESTILOS GENERALES Y FUENTE BANNER ================= */
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: #f0f2f5;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f5f7;
             margin: 0;
             padding: 0;
             color: #333;
@@ -18,17 +18,20 @@
             height: 100vh;
         }
 
-        .top-bar { background-color: #e65c00; height: 8px; width: 100%; }
+        .top-bar { background-color: #002B5C; height: 12px; width: 100%; border-bottom: 4px solid #F26F22; }
         
         .header {
             background: white;
             padding: 20px 40px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 10;
         }
+
+        .header h2 { margin: 0; color: #002B5C; font-size: 22px; }
+        .header p { margin: 4px 0 0 0; color: #555; font-size: 14px; }
 
         .main-container {
             display: flex;
@@ -38,73 +41,50 @@
             overflow: hidden; 
         }
 
-        /* ================= PANEL DE BLOQUES PRECARGADOS ================= */
+        /* ================= PANEL DE BLOQUES ================= */
         .panel-bloques {
-            width: 38%;
+            width: 35%;
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-        }
-
-        .filtro-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .btn-filtro {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #cbd5e0;
-            background: #f7fafc;
-            color: #4a5568;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        .btn-filtro.active {
-            background: #e65c00;
-            color: white;
-            border-color: #e65c00;
+            border: 1px solid #e0e0e0;
         }
 
         .lista-scroll {
             overflow-y: auto;
             flex: 1;
             padding-right: 5px;
+            margin-top: 10px;
         }
 
         /* Tarjeta de Bloque de Horario */
         .horario-card {
-            border: 2px solid #edf2f7;
-            padding: 18px;
-            margin-bottom: 16px;
-            border-radius: 12px;
+            border: 1px solid #ccc;
+            padding: 16px;
+            margin-bottom: 15px;
+            border-radius: 6px;
             background: #ffffff;
             transition: all 0.2s ease;
             cursor: pointer;
         }
 
         .horario-card:hover { 
-            box-shadow: 0 6px 16px rgba(0,0,0,0.08); 
-            border-color: #cbd5e0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            border-color: #999;
         }
 
         .horario-card.selected {
-            border-color: #e65c00;
-            background: #fffaf7;
+            border-color: #002B5C;
+            border-width: 2px;
+            background: #f8fbff;
         }
 
-        .horario-card h4 { margin: 0 0 6px 0; color: #1a202c; font-size: 16px; font-weight: 700; }
-        .horario-card p { margin: 4px 0; font-size: 13px; color: #4a5568; line-height: 1.4; }
+        .horario-card h4 { margin: 0 0 8px 0; color: #002B5C; font-size: 16px; font-weight: bold; }
+        .horario-card p { margin: 4px 0; font-size: 13px; color: #444; }
         
-        /* Indicadores de métricas del bloque */
         .meta-info {
             display: flex;
             gap: 10px;
@@ -112,45 +92,54 @@
             margin-bottom: 12px;
         }
 
-        .badge {
+        .badge-metric { 
+            background: #e9ecef; 
+            color: #495057; 
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: bold;
             text-transform: uppercase;
         }
-        .badge-corrido { background: #e6f4ea; color: #137333; }
-        .badge-disperso { background: #fef7e0; color: #b06000; }
-        .badge-metric { background: #edf2f7; color: #4a5568; }
 
         .btn-action {
             padding: 10px 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: bold;
             font-size: 13px;
             width: 100%;
-            transition: all 0.2s;
+            transition: background 0.2s;
         }
 
-        .btn-add { background: #e65c00; color: white; }
-        .btn-add:hover { background: #cc5200; }
-        .btn-selected { background: #cbd5e0; color: #4a5568; cursor: not-allowed; }
+        .btn-add { background: #002B5C; color: white; }
+        .btn-add:hover { background: #001f44; }
+        .btn-selected { background: #e0e0e0; color: #666; cursor: not-allowed; }
         
-        .btn-export { background: #e6f4ea; color: #137333; width: auto; font-weight: 600; border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer;}
-        .btn-export:hover { background: #137333; color: white; }
+        .btn-export { 
+            background: #f4f5f7; 
+            color: #333; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            padding: 8px 16px; 
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .btn-export:hover { background: #e9ecef; }
 
-        /* ================= CALENDARIO (7:00 A 16:00 RESTRIGIDO) ================= */
+        /* ================= CALENDARIO ================= */
         .panel-horario {
-            width: 62%;
+            width: 65%;
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 0; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border: 1px solid #e0e0e0;
         }
 
         .horario-header-fijo { padding: 20px 25px 0 25px; }
@@ -163,20 +152,20 @@
         .horario-grid {
             display: grid;
             grid-template-columns: 80px repeat(5, 1fr);
-            grid-template-rows: 50px repeat(9, 72px); 
+            grid-template-rows: 40px repeat(10, 65px); 
             background-color: white;
-            border: 1px solid #edf2f7;
-            border-radius: 8px;
+            border: 1px solid #ddd;
         }
 
         .celda-header {
-            background: #f8fafc;
+            background: #f4f5f7;
             text-align: center;
-            font-weight: 600;
-            color: #4a5568;
-            padding-top: 15px;
-            font-size: 14px;
-            border-bottom: 2px solid #edf2f7;
+            font-weight: bold;
+            color: #333;
+            padding-top: 12px;
+            font-size: 13px;
+            border-bottom: 1px solid #ddd;
+            border-right: 1px solid #ddd;
             position: sticky;
             top: 0; 
             z-index: 2;
@@ -184,55 +173,50 @@
 
         .celda-hora {
             text-align: right;
-            padding-right: 12px;
+            padding-right: 10px;
             font-size: 11px;
-            color: #a0aec0;
-            padding-top: 12px;
-            font-weight: 500;
-            border-right: 1px solid #edf2f7;
-            border-bottom: 1px solid #edf2f7;
-            line-height: 1.4;
+            color: #666;
+            padding-top: 10px;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            background: #f9f9f9;
         }
 
         .celda {
-            border-right: 1px solid #f0f4f8;
-            border-bottom: 1px solid #f0f4f8;
-            padding: 4px;
+            border-right: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            padding: 2px;
             position: relative;
-            background-color: #fafafa; 
         }
         
         .celda.ocupada { background-color: white; }
 
         .materia-bloque {
-            height: 95%;
-            width: 95%;
-            border-radius: 8px;
-            padding: 6px 8px;
+            height: 98%;
+            width: 98%;
+            border-radius: 4px;
+            padding: 4px 6px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: center;
             font-size: 11px;
-            line-height: 1.3;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-            animation: popIn 0.2s ease-out;
+            line-height: 1.2;
+            border-left-width: 4px;
+            border-left-style: solid;
         }
 
-        .materia-bloque strong { font-size: 11px; display: block; margin-bottom: 1px; }
+        .materia-bloque strong { font-size: 11px; display: block; margin-bottom: 2px; }
         .materia-bloque span { opacity: 0.9; font-size: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        @keyframes popIn {
-            0% { transform: scale(0.97); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .color-1 { background-color: #e8f0fe; color: #1967d2; border-left: 4px solid #1967d2; } 
-        .color-2 { background-color: #ceead6; color: #0d652d; border-left: 4px solid #0d652d; } 
-        .color-3 { background-color: #fce8e6; color: #c5221f; border-left: 4px solid #c5221f; } 
-        .color-4 { background-color: #fef0db; color: #b06000; border-left: 4px solid #b06000; } 
-        .color-5 { background-color: #f3e8fd; color: #681da8; border-left: 4px solid #681da8; } 
-        .color-6 { background-color: #e4f7fb; color: #00838f; border-left: 4px solid #00838f; } 
+        /* Colores institucionales sobrios */
+        .color-1 { background-color: #e8f0fe; color: #003366; border-left-color: #003366; } 
+        .color-2 { background-color: #e6f4ea; color: #137333; border-left-color: #137333; } 
+        .color-3 { background-color: #fce8e6; color: #c5221f; border-left-color: #c5221f; } 
+        .color-4 { background-color: #fef0db; color: #b06000; border-left-color: #b06000; } 
+        .color-5 { background-color: #f3e8fd; color: #681da8; border-left-color: #681da8; } 
+        .color-6 { background-color: #e4f7fb; color: #00838f; border-left-color: #00838f; } 
+        .color-7 { background-color: #f0e6dd; color: #8a5a44; border-left-color: #8a5a44; } 
     </style>
 </head>
 <body>
@@ -240,28 +224,22 @@
     <div class="top-bar"></div>
     <div class="header">
         <div>
-            <h2 style="margin:0; color:#1a202c; font-size:22px;">Inscripción por Bloques - UPSLP</h2>
-            <p style="margin:4px 0 0 0; color:#718096; font-size:14px;">Ingeniería en Manufactura Avanzada • Plan de Estudios Cuatrimestral</p>
+            <h2>Selección de Horario</h2>
+            <p>Ingeniería en Manufactura Avanzada • Periodo Cuatrimestral</p>
         </div>
         <div style="display: flex; gap: 15px; align-items: center;">
-            <button class="btn-export" onclick="exportarImagen()">Exportar Horario</button>
-            <div style="background: #f7fafc; padding: 10px 20px; border-radius: 8px; border: 1px solid #edf2f7;">
-                <span style="color: #4a5568; font-size: 14px;">Materias Vinculadas:</span>
-                <strong style="color: #e65c00; font-size: 18px; margin-left: 8px;" id="contador-materias">0</strong>
+            <button class="btn-export" onclick="exportarImagen()">Imprimir Horario</button>
+            <div style="background: #f9f9f9; padding: 8px 15px; border: 1px solid #ddd; border-radius: 4px;">
+                <span style="color: #555; font-size: 13px;">Materias en bloque:</span>
+                <strong style="color: #002B5C; font-size: 16px; margin-left: 5px;" id="contador-materias">0</strong>
             </div>
         </div>
     </div>
 
     <div class="main-container">
         <div class="panel-bloques">
-            <h3 style="margin-top:0; color:#2d3748; margin-bottom: 5px;">Estructuras de Horarios Precargados</h3>
-            <p style="color:#718096; font-size: 13px; margin-top:0; margin-bottom:15px;">Filtra y compara los bloques institucionales según la densidad de horas libres.</p>
-            
-            <div class="filtro-container">
-                <button id="filtro-todos" class="btn-filtro active" onclick="filtrarHorarios('todos')">Todos</button>
-                <button id="filtro-corrido" class="btn-filtro" onclick="filtrarHorarios('corrido')">De Corrido</button>
-                <button id="filtro-disperso" class="btn-filtro" onclick="filtrarHorarios('disperso')">Dispersos</button>
-            </div>
+            <h3 style="margin-top:0; color:#002B5C; font-size: 16px;">Bloques Disponibles Asignados</h3>
+            <p style="color:#666; font-size: 12px; margin-top:0; margin-bottom:10px;">Los bloques mostrados corresponden a tu validación académica y requerimiento de idioma.</p>
             
             <div id="lista-horarios" class="lista-scroll"></div>
         </div>
@@ -275,169 +253,106 @@
     </div>
 
     <script>
-        // ================= CATALOGO OFICIAL DE BLOQUES PRECARGADOS (MINIMO 6 CLASES FIJAS) =================
+        // ================= BLOQUES REALES (BASADO EN MAPA CURRICULAR Y RETÍCULA) =================
+        // Se asume que el backend ya detectó si lleva inglés o no. Aquí se listan bloques cerrados.
         const opcionesHorarios = [
             {
-                id: "BLOQUE-IMA-01",
-                nombre: "Bloque 101 - Continuo Matutino",
-                tipo: "corrido",
+                id: "BLOQUE-IMA-A",
+                nombre: "Bloque A - Matutino (Carga Completa)",
                 horasMuertas: 0,
-                descripcion: "Clases compactadas al inicio del día. Entras a las 7 y terminas temprano sin interrupciones.",
-                rango: "07:00 a 13:00 hrs",
-                clases: [
-                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
-                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8"] },
-                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9", "Viernes-9"] },
-                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10"] },
-                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11"] },
-                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] }
-                ]
-            },
-            {
-                id: "BLOQUE-IMA-02",
-                nombre: "Bloque 102 - Continuo Vespertino",
-                tipo: "corrido",
-                horasMuertas: 0,
-                descripcion: "Asignación consecutiva en la segunda mitad del rango permitido. Sin ventanas intermedias.",
-                rango: "10:00 a 16:00 hrs",
-                clases: [
-                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10"] },
-                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11"] },
-                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12", "Viernes-12"] },
-                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13"] },
-                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-14", "Martes-14", "Miércoles-14", "Jueves-14"] },
-                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-15", "Martes-15", "Miércoles-15", "Jueves-15"] }
-                ]
-            },
-            {
-                id: "BLOQUE-IMA-03",
-                nombre: "Bloque 103 - Alternado Ventana Fija",
-                tipo: "disperso",
-                horasMuertas: 5,
-                descripcion: "Distribución regular con una hora libre fija todos los días a las 10:00 AM para descanso o talleres.",
                 rango: "07:00 a 14:00 hrs",
+                descripcion: "Horario continuo de 35 horas semanales. Sin ventanas intermedias.",
                 clases: [
                     { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
-                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8"] },
-                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9", "Viernes-9"] },
-                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11"] },
-                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] },
-                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13"] }
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8", "Viernes-7", "Viernes-8"] },
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9"] },
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-9", "Viernes-10", "Viernes-11"] },
+                    { codigo: "IMA-DBI", nombre: "Dibujo Industrial", color: "color-5", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11", "Viernes-12"] },
+                    { codigo: "IMA-ING", nombre: "Inglés", color: "color-3", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12", "Viernes-13"] },
+                    { codigo: "IMA-PYI", nombre: "Proyecto Integrador", color: "color-7", bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13"] }
                 ]
             },
             {
-                id: "BLOQUE-IMA-04",
-                nombre: "Bloque 104 - Dispersión Intermedia",
-                tipo: "disperso",
-                horasMuertas: 10,
-                descripcion: "Esquema extendido con múltiples ventanas intercaladas. Máxima separación entre sesiones teóricas.",
-                rango: "07:00 a 16:00 hrs",
+                id: "BLOQUE-IMA-B",
+                nombre: "Bloque B - Mixto (Carga Completa)",
+                horasMuertas: 3,
+                rango: "08:00 a 16:00 hrs",
+                descripcion: "Entrada más tarde, incluye horas libres para actividades extracurriculares.",
                 clases: [
-                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-7", "Miércoles-7", "Viernes-7"] },
-                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-9", "Miércoles-9", "Viernes-9"] },
-                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-11", "Miércoles-11", "Viernes-11"] },
-                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Martes-8", "Jueves-8", "Viernes-12"] },
-                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Martes-10", "Jueves-10", "Viernes-14"] },
-                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Martes-13", "Jueves-13", "Viernes-15"] }
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8"] },
+                    { codigo: "IMA-DBI", nombre: "Dibujo Industrial", color: "color-5", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9", "Viernes-8"] },
+                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11"] },
+                    { codigo: "IMA-ING", nombre: "Inglés", color: "color-3", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12", "Viernes-12"] },
+                    { codigo: "IMA-PYI", nombre: "Proyecto Integrador", color: "color-7", bloques: ["Lunes-13", "Martes-13", "Miércoles-13", "Jueves-13"] },
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-14", "Martes-14", "Miércoles-14", "Jueves-14", "Viernes-13", "Viernes-14"] },
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-15", "Martes-15", "Miércoles-15", "Jueves-15", "Viernes-9", "Viernes-10", "Viernes-11"] }
                 ]
             },
             {
-                id: "BLOQUE-IMA-05",
-                nombre: "Bloque 105 - Continuo Escalonado",
-                tipo: "corrido",
+                id: "BLOQUE-IMA-C",
+                nombre: "Bloque C - Recorrido (Sin Inglés)",
                 horasMuertas: 0,
-                descripcion: "Bloque compacto sin ventanas. Los días lunes entras tarde y los viernes sales muy temprano.",
-                rango: "08:00 a 15:00 hrs",
+                rango: "07:00 a 13:00 hrs",
+                descripcion: "Bloque exclusivo de 30 horas para alumnos con nivel de inglés liberado.",
                 clases: [
-                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-9", "Martes-8", "Miércoles-8", "Jueves-8"] },
-                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-10", "Martes-9", "Miércoles-9", "Jueves-9"] },
-                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-11", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-7"] },
-                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-12", "Martes-11", "Miércoles-11", "Jueves-11", "Viernes-8"] },
-                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-13", "Martes-12", "Miércoles-12", "Jueves-12", "Viernes-9"] },
-                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-14", "Martes-13", "Miércoles-13", "Jueves-13", "Viernes-10"] }
-                ]
-            },
-            {
-                id: "BLOQUE-IMA-06",
-                nombre: "Bloque 106 - Ventanas de Fin de Semana",
-                tipo: "disperso",
-                horasMuertas: 6,
-                descripcion: "Estructura compacta de lunes a jueves, pero con carga dispersa y horas libres los viernes.",
-                rango: "07:00 a 15:00 hrs",
-                clases: [
-                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7"] },
-                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8"] },
-                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9", "Viernes-7"] },
-                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10", "Viernes-9"] },
-                    { codigo: "IMA-FIS", nombre: "Física General", color: "color-3", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11", "Viernes-11"] },
-                    { codigo: "IMA-MET", nombre: "Metrología Dimensional", color: "color-5", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12", "Viernes-13"] }
+                    { codigo: "IMA-PFA", nombre: "Procesos de Fabricación I", color: "color-6", bloques: ["Lunes-7", "Martes-7", "Miércoles-7", "Jueves-7", "Viernes-7", "Viernes-8", "Viernes-9"] },
+                    { codigo: "IMA-CCA", nombre: "Control de Calidad", color: "color-2", bloques: ["Lunes-8", "Martes-8", "Miércoles-8", "Jueves-8", "Viernes-10", "Viernes-11"] },
+                    { codigo: "IMA-CA1", nombre: "Cálculo Integral", color: "color-4", bloques: ["Lunes-9", "Martes-9", "Miércoles-9", "Jueves-9"] },
+                    { codigo: "IMA-DPT", nombre: "Desarrollo del Pensamiento", color: "color-1", bloques: ["Lunes-10", "Martes-10", "Miércoles-10", "Jueves-10"] },
+                    { codigo: "IMA-DBI", nombre: "Dibujo Industrial", color: "color-5", bloques: ["Lunes-11", "Martes-11", "Miércoles-11", "Jueves-11", "Viernes-12"] },
+                    { codigo: "IMA-PYI", nombre: "Proyecto Integrador", color: "color-7", bloques: ["Lunes-12", "Martes-12", "Miércoles-12", "Jueves-12"] }
                 ]
             }
         ];
 
-        let idHorarioSeleccionado = localStorage.getItem('bloque_seleccionado_v7') || null;
-        let filtroActual = 'todos';
+        let idHorarioSeleccionado = localStorage.getItem('bloque_seleccionado_v8') || null;
 
-        // ================= CONSTRUIR CUADRÍCULA ESTÁTICA (7 AM A 4 PM RESTRINGIDO) =================
         function inicializarHorarioGrid() {
             const grid = document.getElementById('cuadricula');
-            const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+            const dias = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'];
             
             grid.innerHTML = `<div class="celda-header"></div>`;
             dias.forEach(dia => grid.innerHTML += `<div class="celda-header">${dia}</div>`);
 
-            // Rango solicitado: de 7 a 16 hrs (El bloque de las 15:00 concluye a las 16:00)
-            for (let hora = 7; hora <= 15; hora++) {
+            // Rango horario ampliado de 7:00 a 16:00
+            for (let hora = 7; hora <= 16; hora++) {
                 let inicio = hora < 10 ? `0${hora}:00` : `${hora}:00`;
                 let fin = (hora + 1) < 10 ? `0${hora+1}:00` : `${hora+1}:00`;
                 
-                grid.innerHTML += `<div class="celda-hora">${inicio}<br><span style="font-size:10px;color:#a0aec0;">a ${fin}</span></div>`;
-                dias.forEach(dia => grid.innerHTML += `<div class="celda" id="${dia}-${hora}"></div>`);
+                grid.innerHTML += `<div class="celda-hora">${inicio}<br><span style="font-size:9px;color:#999;">a ${fin}</span></div>`;
+                // Capitalizar primera letra para coincidir con los IDs del JSON
+                dias.forEach(dia => {
+                    let diaCapitalizado = dia.charAt(0).toUpperCase() + dia.slice(1);
+                    if (diaCapitalizado === 'Miércoles') diaCapitalizado = 'Miércoles';
+                    grid.innerHTML += `<div class="celda" id="${diaCapitalizado}-${hora}"></div>`
+                });
             }
         }
 
-        // ================= FILTRADO Y RENDERIZADO DE TARJETAS DE BLOQUES =================
-        function filtrarHorarios(tipo) {
-            filtroActual = tipo;
-            
-            document.querySelectorAll('.btn-filtro').forEach(btn => btn.classList.remove('active'));
-            if (tipo === 'todos') document.getElementById('filtro-todos').classList.add('active');
-            if (tipo === 'corrido') document.getElementById('filtro-corrido').classList.add('active');
-            if (tipo === 'disperso') document.getElementById('filtro-disperso').classList.add('active');
-
-            const filtrados = opcionesHorarios.filter(h => tipo === 'todos' || h.tipo === tipo);
-            renderizarListaBloques(filtrados);
-        }
-
-        function renderizarListaBloques(lista) {
+        function renderizarListaBloques() {
             const contenedor = document.getElementById('lista-horarios');
             contenedor.innerHTML = '';
 
-            lista.forEach(horario => {
+            opcionesHorarios.forEach(horario => {
                 const esActivo = horario.id === idHorarioSeleccionado;
-                const tipoTexto = horario.tipo === 'corrido' ? 'De Corrido' : 'Disperso';
-                const claseBadge = horario.tipo === 'corrido' ? 'badge-corrido' : 'badge-disperso';
 
                 contenedor.innerHTML += `
                     <div class="horario-card ${esActivo ? 'selected' : ''}" onclick="seleccionarBloque('${horario.id}')">
-                        <div class="meta-info">
-                            <span class="badge ${claseBadge}">${tipoTexto}</span>
-                            <span class="badge badge-metric">Horas Libres: ${horario.horasMuertas}h</span>
-                        </div>
                         <h4>${horario.nombre}</h4>
-                        <p><strong>Ventana de Permanencia:</strong> ${horario.rango}</p>
-                        <p style="color: #718096; font-size: 12px; margin-top:6px;">${horario.descripcion}</p>
-                        <button style="margin-top:12px;" class="btn-action ${esActivo ? 'btn-selected' : 'btn-add'}">
-                            ${esActivo ? 'Paquete Seleccionado' : 'Cargar Bloque Completo'}
+                        <p><strong>Horario:</strong> ${horario.rango}</p>
+                        <p style="color: #666; font-size: 12px; margin-top:6px;">${horario.descripcion}</p>
+                        <div class="meta-info">
+                            <span class="badge-metric">Ventanas: ${horario.horasMuertas}h</span>
+                        </div>
+                        <button style="margin-top:5px;" class="btn-action ${esActivo ? 'btn-selected' : 'btn-add'}">
+                            ${esActivo ? 'Bloque Seleccionado' : 'Asignar Bloque'}
                         </button>
                     </div>
                 `;
             });
         }
 
-        // ================= CARGAR EL BLOQUE SELECCIONADO EN EL MAPA VISUAL =================
         function pintarBloqueEnGrid() {
-            // Resetear celdas de la cuadricula
             document.querySelectorAll('.celda').forEach(celda => {
                 celda.innerHTML = '';
                 celda.classList.remove('ocupada');
@@ -457,30 +372,28 @@
                             celda.classList.add('ocupada');
                             celda.innerHTML = `
                                 <div class="materia-bloque ${materia.color} ">
-                                    <strong>${materia.codigo}</strong>
-                                    <span>${materia.nombre}</span>
+                                    <strong>${materia.nombre}</strong>
+                                    <span>${materia.codigo}</span>
                                 </div>
                             `;
                         }
                     });
                 });
-                // Actualiza dinámicamente reflejando las 6 clases obligatorias cargadas del tirón
                 document.getElementById('contador-materias').innerText = paquete.clases.length;
             }
         }
 
         function seleccionarBloque(idPaquete) {
             idHorarioSeleccionado = idPaquete;
-            localStorage.setItem('bloque_seleccionado_v7', idHorarioSeleccionado);
+            localStorage.setItem('bloque_seleccionado_v8', idHorarioSeleccionado);
             
-            filtrarHorarios(filtroActual);
+            renderizarListaBloques();
             pintarBloqueEnGrid();
         }
 
-        // ================= EXPORTAR GENERACIÓN DE IMAGEN =================
         function exportarImagen() {
             if(!idHorarioSeleccionado){
-                alert("Selecciona una estructura de bloque antes de exportar.");
+                alert("Selecciona un bloque antes de imprimir.");
                 return;
             }
             const areaVisual = document.getElementById('area-exportacion');
@@ -491,16 +404,15 @@
                 logging: false
             }).then(canvas => {
                 const archivo = document.createElement('a');
-                archivo.download = `Horario_UPSLP_${idHorarioSeleccionado}.png`;
+                archivo.download = `Mi_Horario_UPSLP.png`;
                 archivo.href = canvas.toDataURL('image/png');
                 archivo.click();
             });
         }
 
-        // ================= START =================
         function ejecutarCarga() {
             inicializarHorarioGrid();
-            filtrarHorarios('todos');
+            renderizarListaBloques();
             if (idHorarioSeleccionado) {
                 pintarBloqueEnGrid();
             }
